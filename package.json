@@ -4,7 +4,9 @@
   "private": true,
   "description": "Pehra - an AI watchkeeper for the legal paperwork ordinary Indians are asked to sign.",
   "license": "MIT",
-  "engines": { "node": ">=20.0.0" },
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -33,5 +35,15 @@
     "jsdom": "^25.0.1",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "protobufjs": true,
+    "sharp": true,
+    "@google/genai": true,
+    "esbuild@0.21.5": true,
+    "protobufjs@7.6.6": true,
+    "sharp@0.34.5": true,
+    "@google/genai@1.52.0": true
   }
 }
