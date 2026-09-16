@@ -102,6 +102,8 @@ npm run build                  # production build
 
 Get a key at <https://aistudio.google.com/apikey>. Deploys to Vercel with
 `GEMINI_API_KEY` set as an environment variable; no other configuration.
+Requires Node.js 24.x (pinned in `package.json`'s `engines` field and in
+`.nvmrc`).
 
 ---
 
