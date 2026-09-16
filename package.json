@@ -5,7 +5,7 @@
   "description": "Pehra - an AI watchkeeper for the legal paperwork ordinary Indians are asked to sign.",
   "license": "MIT",
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",
