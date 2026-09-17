@@ -10,7 +10,12 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "no-referrer" },
   { key: "X-DNS-Prefetch-Control", value: "off" },
-  { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=()" },
+  { key: "X-Download-Options", value: "noopen" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+  },
   {
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
@@ -38,6 +43,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },

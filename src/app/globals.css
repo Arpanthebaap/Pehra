@@ -487,3 +487,193 @@ footer {
   color: var(--ink-soft);
   font-size: var(--step--1);
 }
+
+/* ---- Sample Document Chips ------------------------------------------- */
+
+.samples-container {
+  margin: 1.25rem 0 0.5rem;
+}
+
+.samples-label {
+  font-size: var(--step--1);
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 0.5rem;
+}
+
+.samples-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sample-chip {
+  font-size: var(--step--1);
+  padding: 0.4rem 0.75rem;
+  border-radius: 9999px;
+  background: var(--paper-sunk);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.sample-chip:hover {
+  background: var(--stamp-wash);
+  border-color: var(--stamp);
+}
+
+.sample-chip:focus-visible {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
+/* ---- Actionable Legal Checklist ------------------------------------- */
+
+.checklist-card {
+  border: 1px solid var(--rule);
+  background: #fff;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.checklist-stat {
+  padding: 0.75rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.checklist-stat-void {
+  background: var(--void-wash);
+  color: var(--void);
+  border: 1px solid var(--void);
+}
+
+.checklist-stat-onesided {
+  background: var(--one-sided-wash);
+  color: var(--one-sided);
+  border: 1px solid var(--one-sided);
+}
+
+.checklist-stat-missing {
+  background: var(--missing-wash);
+  color: var(--missing);
+  border: 1px solid var(--missing);
+}
+
+.checklist-stat-deadlines {
+  background: var(--stamp-wash);
+  color: var(--stamp);
+  border: 1px solid var(--stamp);
+}
+
+.checklist-stat-num {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.checklist-stat-lbl {
+  font-size: var(--step--1);
+  margin-top: 0.35rem;
+  font-weight: 500;
+}
+
+/* ---- Export & Action Buttons ----------------------------------------- */
+
+.export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.btn-secondary {
+  background: #fff;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-size: var(--step--1);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: var(--paper-sunk);
+}
+
+.toast-feedback {
+  font-size: var(--step--1);
+  color: var(--stamp);
+  font-weight: 500;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---- Print Stylesheet ------------------------------------------------ */
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  .shell {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .masthead-tools,
+  .samples-container,
+  textarea,
+  .actions,
+  .export-actions,
+  button,
+  footer,
+  #main > section:first-child {
+    display: none !important;
+  }
+
+  .print-only-header {
+    display: block !important;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .print-only-header h1 {
+    font-size: 18pt;
+    margin: 0;
+  }
+
+  .section {
+    margin-top: 1.5rem !important;
+    page-break-inside: avoid;
+  }
+
+  .finding,
+  .deadline {
+    border: 1px solid #ccc !important;
+    page-break-inside: avoid;
+    margin-bottom: 0.75rem !important;
+  }
+}
+
+.print-only-header {
+  display: none;
+}
+

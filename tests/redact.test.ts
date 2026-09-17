@@ -42,6 +42,30 @@ describe("redact", () => {
     expect(redactions).toHaveLength(0);
   });
 
+  it("masks Indian Voter ID (EPIC)", () => {
+    expect(redact("Voter ID: ABC1234567").text).toBe("Voter ID: [VOTER ID REDACTED]");
+  });
+
+  it("masks Indian Passport numbers", () => {
+    expect(redact("Passport No: J1234567").text).toBe("Passport No: [PASSPORT REDACTED]");
+  });
+
+  it("masks Bank IFSC codes", () => {
+    expect(redact("IFSC: SBIN0001234").text).toBe("IFSC: [IFSC REDACTED]");
+  });
+
+  it("masks UPI IDs / VPAs", () => {
+    expect(redact("Pay to rahul.kumar@okhdfcbank or merchant@paytm").text).toBe(
+      "Pay to [UPI REDACTED] or [UPI REDACTED]",
+    );
+  });
+
+  it("masks Indian Vehicle Registration numbers", () => {
+    expect(redact("Vehicle DL-01-AB-1234 and MH12CD5678").text).toBe(
+      "Vehicle [VEHICLE REG REDACTED] and [VEHICLE REG REDACTED]",
+    );
+  });
+
   it("is a no-op on empty input", () => {
     expect(redact("")).toEqual({ text: "", redactions: [] });
   });

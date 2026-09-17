@@ -19,6 +19,8 @@ const MAX_REQUESTS = 6;
 const MAX_TRACKED_KEYS = 10_000;
 
 const windows = new Map<string, Window>();
+let callCount = 0;
+const SWEEP_INTERVAL = 50;
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -27,10 +29,23 @@ export interface RateLimitResult {
 }
 
 export function rateLimit(key: string, now: number = Date.now()): RateLimitResult {
+  callCount += 1;
+  if (callCount % SWEEP_INTERVAL === 0) {
+    evictExpired(now);
+  }
+
   const existing = windows.get(key);
 
   if (!existing || now >= existing.resetAt) {
-    if (windows.size >= MAX_TRACKED_KEYS) evictExpired(now);
+    if (windows.size >= MAX_TRACKED_KEYS) {
+      evictExpired(now);
+      // If still at capacity, evict oldest entries (LRU order in Map)
+      while (windows.size >= MAX_TRACKED_KEYS) {
+        const oldest = windows.keys().next().value;
+        if (oldest !== undefined) windows.delete(oldest);
+        else break;
+      }
+    }
     windows.set(key, { count: 1, resetAt: now + WINDOW_MS });
     return { allowed: true, remaining: MAX_REQUESTS - 1, retryAfterSeconds: 0 };
   }
@@ -51,15 +66,20 @@ export function rateLimit(key: string, now: number = Date.now()): RateLimitResul
   };
 }
 
-function evictExpired(now: number): void {
+export function evictExpired(now: number): void {
   for (const [key, window] of windows) {
     if (now >= window.resetAt) windows.delete(key);
   }
 }
 
-/** Test seam. */
+/** Test seams. */
 export function resetRateLimiter(): void {
   windows.clear();
+  callCount = 0;
+}
+
+export function getTrackedKeyCount(): number {
+  return windows.size;
 }
 
 /**

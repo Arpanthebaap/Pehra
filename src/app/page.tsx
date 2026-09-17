@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useRef, useState } from "react";
+import { useCallback, useId, useMemo, useRef, useState } from "react";
 import { Disclaimer } from "@/components/Disclaimer";
 import { ClockHero } from "@/components/ClockHero";
 import { DeadlineList } from "@/components/DeadlineList";
@@ -8,7 +8,7 @@ import { Findings } from "@/components/Findings";
 import { redact, type Redaction } from "@/lib/redact";
 import { MAX_DOCUMENT_CHARS, type GroundedFinding, type Language } from "@/lib/schema";
 import type { Deadline } from "@/lib/clock";
-import { SAMPLE_RENT_AGREEMENT } from "@/lib/samples";
+import { SAMPLE_DOCUMENTS } from "@/lib/samples";
 import { t } from "@/lib/i18n/translations";
 
 interface AnalysisResult {
@@ -44,6 +44,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [redactions, setRedactions] = useState<Redaction[]>([]);
+  const [copiedToast, setCopiedToast] = useState(false);
 
   const textareaId = useId();
   const languageId = useId();
@@ -109,12 +110,85 @@ export default function Home() {
     }
   }, [text, language]);
 
+  const loadSample = useCallback((sampleText: string) => {
+    setText(sampleText);
+    setResult(null);
+    setError(null);
+  }, []);
+
+  const counts = useMemo(() => {
+    const c = { void: 0, one_sided: 0, standard: 0, missing: 0 };
+    if (!result) return c;
+    for (const f of result.findings) {
+      if (f.verdict in c) c[f.verdict as keyof typeof c] += 1;
+    }
+    return c;
+  }, [result]);
+
+  const copyBriefing = useCallback(async () => {
+    if (!result) return;
+    const lines: string[] = [
+      `=== PEHRA LEGAL AID INTAKE BRIEFING ===`,
+      `Date: ${result.analysedOn}`,
+      `Document Kind: ${result.documentKind}`,
+      ``,
+      `SUMMARY:`,
+      result.summary,
+      ``,
+    ];
+
+    if (result.urgent) {
+      lines.push(
+        `URGENT STATUTORY DEADLINE:`,
+        `${result.urgent.action} (${result.urgent.daysRemaining} days remaining - target: ${result.urgent.dueDate})`,
+        `Basis: ${result.urgent.basis}`,
+        ``,
+      );
+    }
+
+    const criticalFindings = result.findings.filter(
+      (f) => f.verdict === "void" || f.verdict === "missing" || f.verdict === "one_sided",
+    );
+    if (criticalFindings.length > 0) {
+      lines.push(`KEY CLAUSES & STATUTORY CITATIONS:`);
+      for (const f of criticalFindings) {
+        lines.push(`- [${f.verdict.toUpperCase()}] ${f.clause}`);
+        lines.push(`  Citation: ${f.statute.citation} (${f.statute.title})`);
+        lines.push(`  Takeaway: ${f.explanation}`);
+      }
+      lines.push(``);
+    }
+
+    if (result.questionsForALawyer.length > 0) {
+      lines.push(`QUESTIONS FOR LEGAL AID LAWYER:`);
+      result.questionsForALawyer.forEach((q, idx) => {
+        lines.push(`${idx + 1}. ${q}`);
+      });
+      lines.push(``);
+    }
+
+    lines.push(`NALSA Helpline: 15100 | Legal Services Authorities Act, 1987, s. 12`);
+
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      setCopiedToast(true);
+      setTimeout(() => setCopiedToast(false), 2500);
+    } catch {
+      // Fallback if browser clipboard API blocked
+    }
+  }, [result]);
+
   const tooShort = text.trim().length > 0 && text.trim().length < 40;
   const tooLong = text.length > MAX_DOCUMENT_CHARS;
   const tr = t(language);
 
   return (
     <div className="shell">
+      <div className="print-only-header">
+        <h1>पहरा · Pehra</h1>
+        <p>{tr.legalAidClinicTitle} — {result?.analysedOn ?? new Date().toISOString().slice(0, 10)}</p>
+      </div>
+
       <header className="masthead">
         <div>
           <h1 className="wordmark">
@@ -168,6 +242,23 @@ export default function Home() {
             </div>
           </div>
 
+          <div className="samples-container">
+            <p className="samples-label">{tr.samplesLabel}</p>
+            <div className="samples-chips" role="group" aria-label={tr.samplesLabel}>
+              {SAMPLE_DOCUMENTS.map((sample) => (
+                <button
+                  key={sample.id}
+                  type="button"
+                  className="sample-chip"
+                  onClick={() => loadSample(sample.text)}
+                  title={sample.description[language]}
+                >
+                  {sample.title[language]}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <label htmlFor={textareaId} style={{ marginTop: "1rem" }}>
             {tr.documentLabel}
           </label>
@@ -191,16 +282,6 @@ export default function Home() {
               disabled={busy || tooShort || tooLong || text.trim().length === 0}
             >
               {busy ? tr.btnReading : tr.btnRead}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setText(SAMPLE_RENT_AGREEMENT);
-                setResult(null);
-                setError(null);
-              }}
-            >
-              {tr.btnExample}
             </button>
             <span className="counter" aria-live="polite">
               {text.length.toLocaleString("en-IN")} / {MAX_DOCUMENT_CHARS.toLocaleString("en-IN")} {tr.characters}
@@ -233,6 +314,51 @@ export default function Home() {
               {result.urgent ? (
                 <ClockHero deadline={result.urgent} language={language} />
               ) : null}
+
+              {/* Actionable Legal Checklist */}
+              <div className="checklist-card" role="region" aria-label={tr.checklistTitle}>
+                <h3 style={{ margin: "0 0 0.5rem" }}>{tr.checklistTitle}</h3>
+                <div className="checklist-grid">
+                  <div className="checklist-stat checklist-stat-void">
+                    <div className="checklist-stat-num">{counts.void}</div>
+                    <div className="checklist-stat-lbl">{tr.verdictLabels.void}</div>
+                  </div>
+                  <div className="checklist-stat checklist-stat-onesided">
+                    <div className="checklist-stat-num">{counts.one_sided}</div>
+                    <div className="checklist-stat-lbl">{tr.verdictLabels.one_sided}</div>
+                  </div>
+                  <div className="checklist-stat checklist-stat-missing">
+                    <div className="checklist-stat-num">{counts.missing}</div>
+                    <div className="checklist-stat-lbl">{tr.verdictLabels.missing}</div>
+                  </div>
+                  <div className="checklist-stat checklist-stat-deadlines">
+                    <div className="checklist-stat-num">{result.deadlines.length}</div>
+                    <div className="checklist-stat-lbl">{tr.deadlinesHeading}</div>
+                  </div>
+                </div>
+
+                <div className="export-actions">
+                  <button
+                    type="button"
+                    className="btn-secondary btn-print"
+                    onClick={() => window.print()}
+                  >
+                    📄 {tr.btnExportPrint}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary btn-copy"
+                    onClick={() => void copyBriefing()}
+                  >
+                    📋 {tr.btnCopyBriefing}
+                  </button>
+                  {copiedToast ? (
+                    <span className="toast-feedback" role="status">
+                      ✓ {tr.copiedBriefing}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
 
               <section className="section">
                 <h2>{tr.summaryHeading}</h2>

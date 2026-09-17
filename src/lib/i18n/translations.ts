@@ -12,6 +12,12 @@ export interface UiTranslations {
   btnRead: string;
   btnReading: string;
   btnExample: string;
+  samplesLabel: string;
+  btnExportPrint: string;
+  btnCopyBriefing: string;
+  copiedBriefing: string;
+  checklistTitle: string;
+  legalAidClinicTitle: string;
   characters: string;
   tooShort: string;
   tooLong: string;
@@ -71,6 +77,12 @@ export const TRANSLATIONS: Record<Language, UiTranslations> = {
     btnRead: "Read this document",
     btnReading: "Reading…",
     btnExample: "Load an example",
+    samplesLabel: "Try an example document:",
+    btnExportPrint: "Print / Save as PDF for Lawyer",
+    btnCopyBriefing: "Copy case briefing",
+    copiedBriefing: "Briefing copied to clipboard",
+    checklistTitle: "Actionable Legal Checklist",
+    legalAidClinicTitle: "Legal Aid Briefing (NALSA / DLSA)",
     characters: "characters",
     tooShort: " — too short to read",
     tooLong: " — too long, paste the parts you are worried about",
@@ -142,6 +154,12 @@ export const TRANSLATIONS: Record<Language, UiTranslations> = {
     btnRead: "यह दस्तावेज़ पढ़ें",
     btnReading: "पढ़ा जा रहा है…",
     btnExample: "उदाहरण लोड करें",
+    samplesLabel: "उदाहरण दस्तावेज़ चुनें:",
+    btnExportPrint: "वकील के लिए प्रिंट / PDF सहेजें",
+    btnCopyBriefing: "केस का विवरण कॉपी करें",
+    copiedBriefing: "विवरण क्लिपबोर्ड पर कॉपी किया गया",
+    checklistTitle: "कार्रवाई योग्य कानूनी चेकलिस्ट",
+    legalAidClinicTitle: "कानूनी सहायता केस विवरण (नालसा / डीएलएसए)",
     characters: "अक्षर",
     tooShort: " — पढ़ने के लिए बहुत छोटा है",
     tooLong: " — बहुत लंबा है, केवल वे हिस्से पेस्ट करें जिनकी आपको चिंता है",
@@ -212,6 +230,12 @@ export const TRANSLATIONS: Record<Language, UiTranslations> = {
     btnRead: "এই নথিটি পড়ুন",
     btnReading: "পড়া হচ্ছে…",
     btnExample: "একটি উদাহরণ লোড করুন",
+    samplesLabel: "একটি উদাহরণ নথি বেছে নিন:",
+    btnExportPrint: "আইনজীবীর জন্য প্রিন্ট / PDF সংরক্ষণ করুন",
+    btnCopyBriefing: "কেসের বিবরণ কপি করুন",
+    copiedBriefing: "বিবরণ ক্লিপবোর্ডে কপি করা হয়েছে",
+    checklistTitle: "কার্যকরী আইনি চেকলিস্ট",
+    legalAidClinicTitle: "আইনি সহায়তা কেস বিবরণ (নালসা / ডিএলএসএ)",
     characters: "অক্ষর",
     tooShort: " — পড়ার জন্য খুব সংক্ষিপ্ত",
     tooLong: " — অতিরিক্ত দীর্ঘ, যে অংশগুলো নিয়ে আপনি চিন্তিত শুধু সেগুলো পেস্ট করুন",

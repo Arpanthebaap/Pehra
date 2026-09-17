@@ -29,6 +29,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > 100_000) {
+    return fail("Payload too large. Please paste only the relevant portions.", 413);
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -44,7 +49,17 @@ export async function POST(request: Request) {
     );
   }
 
-  const { text, language } = parsed.data;
+  // Security: Normalize Unicode and strip non-printable control characters
+  const sanitizedText = parsed.data.text
+    .normalize("NFKC")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim();
+
+  if (sanitizedText.length < 40) {
+    return fail("That document is too short to read. Paste the full agreement or section.", 400);
+  }
+
+  const language = parsed.data.language;
 
   // The client's date is a convenience, not a trust boundary. An unparseable or
   // absent value falls back to server time rather than failing the request.
@@ -52,7 +67,7 @@ export async function POST(request: Request) {
   const todayIso = toIsoDate(today);
 
   try {
-    const output = await analyzeDocument({ text, language, today: todayIso });
+    const output = await analyzeDocument({ text: sanitizedText, language, today: todayIso });
 
     const { findings, discarded } = groundFindings(output.findings, language);
     const deadlines = buildClock(output.events, today, language);

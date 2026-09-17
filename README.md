@@ -95,7 +95,7 @@ npm run dev                    # http://localhost:3000
 ```
 
 ```bash
-npm run verify                 # typecheck + 72 tests
+npm run verify                 # typecheck + 117 tests
 npm run test                   # vitest
 npm run build                  # production build
 ```
@@ -133,19 +133,21 @@ here is a product requirement, not a polish item.
 
 ## Security and privacy
 
-Pehra handles rent agreements and salary slips. It is built to hold as little
+Pehra handles rent agreements, salary slips, and loan contracts. It is built to hold as little
 as possible.
 
 - **Nothing is stored.** No database, no session, no log of document text. The
   analysis exists in one response and then it is gone.
 - **Identifiers are stripped in the browser**, before the request is sent —
-  Aadhaar, PAN, phone, email, account numbers (`src/lib/redact.ts`). Imperfect
+  Aadhaar, PAN, Voter ID (EPIC), Passport, Bank IFSC, UPI IDs, Vehicle Registration,
+  phone, email, and bank account numbers (`src/lib/redact.ts`). Imperfect
   by nature, so the UI says so rather than overpromising.
-- Strict CSP, HSTS, `frame-ancestors 'none'`, `X-Content-Type-Options`,
-  `Referrer-Policy: no-referrer` (`next.config.ts`).
-- All input validated with Zod before it reaches the model; oversized payloads
-  rejected before they cost anything.
-- Fixed-window rate limiting on the unauthenticated endpoint.
+- Strict CSP, HSTS, `frame-ancestors 'none'`, `X-Content-Type-Options: nosniff`,
+  `X-Download-Options: noopen`, `X-Permitted-Cross-Domain-Policies: none`,
+  and `Referrer-Policy: no-referrer` (`next.config.ts`).
+- All input validated with Zod before it reaches the model; input normalized to NFKC
+  and stripped of null bytes/control chars; oversized payloads rejected early.
+- Bounded rate limiting with active TTL garbage collection and LRU memory cap.
 - Errors are logged server-side and returned vague — no stack traces, no
   provider messages leaked to the client.
 - `Cache-Control: no-store` on every analysis response.
@@ -158,7 +160,7 @@ Stated plainly, because a tool like this is dangerous if oversold:
 
 - It is **not legal advice** and not a substitute for a lawyer.
 - Its corpus is **deliberately narrow** — fifteen provisions covering everyday
-  rent, work, consumer and loan situations. It will miss things outside that.
+  rent, work, consumer, cheque bounce, and loan situations. It will miss things outside that.
 - The **Model Tenancy Act, 2021 is a template**, binding only in States that
   have enacted it. Pehra says so on every finding that relies on it.
 - It does not know your State's local law, your full facts, or anything not on
@@ -174,18 +176,22 @@ Stated plainly, because a tool like this is dangerous if oversold:
 ```
 src/
   app/
-    api/analyze/route.ts    validation, rate limiting, orchestration
-    page.tsx                the reading room
-    globals.css             design tokens; verdict colours carry meaning
+    api/analyze/route.ts    validation, sanitization, rate limiting, orchestration
+    page.tsx                the reading room with multi-domain samples & export
+    error.tsx               accessible client error boundary
+    not-found.tsx           custom 404 page
+    globals.css             design tokens, print stylesheet, verdict palette
   components/               presentational only, so they can be axe-tested
   lib/
-    corpus/statutes.ts      the only law in the system
-    clock.ts                deterministic limitation arithmetic
-    gemini.ts               structured-output call + the grounded prompt
-    schema.ts               Zod contracts + the grounding filter
-    redact.ts               client-side PII masking
-    ratelimit.ts            fixed-window limiter
-tests/                      72 tests: clock, grounding, redaction, limits, a11y
+    corpus/statutes.ts      the only law in the system (localized EN/HI/BN)
+    clock.ts                deterministic limitation arithmetic (localized EN/HI/BN)
+    gemini.ts               structured-output call + grounded prompt
+    schema.ts               Zod contracts + grounding filter
+    samples.ts              multi-domain sample suite (Rent, Job, Cheque, Loan, Warranty)
+    redact.ts               client-side Indian PII masking (10 identifier types)
+    ratelimit.ts            bounded limiter with active TTL garbage collection
+    i18n/translations.ts    full UI, clock, checklist, and statute localization
+tests/                      117 tests: clock, grounding, redact, limits, API, UI, a11y
 ```
 
 MIT licensed. See `LICENSE`.
