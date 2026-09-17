@@ -1,11 +1,7 @@
 import { VerdictBadge } from "./Verdict";
-import type { GroundedFinding } from "@/lib/schema";
-
-const CONFIDENCE_NOTE: Record<GroundedFinding["confidence"], string | null> = {
-  high: null,
-  medium: "Pehra is fairly sure about this one, but check it with a lawyer.",
-  low: "Pehra is unsure about this one. Treat it as a question to ask, not a fact.",
-};
+import type { GroundedFinding, Language } from "@/lib/schema";
+import { getStatute } from "@/lib/corpus/statutes";
+import { t } from "@/lib/i18n/translations";
 
 /**
  * Findings are laid out as marginalia: the clause on the left, the note in the
@@ -17,22 +13,25 @@ const CONFIDENCE_NOTE: Record<GroundedFinding["confidence"], string | null> = {
  * should be able to go and check, and finding the provision should not require
  * trusting Pehra a second time.
  */
-export function Findings({ findings }: { findings: readonly GroundedFinding[] }) {
+export function Findings({
+  findings,
+  language = "en",
+}: {
+  findings: readonly GroundedFinding[];
+  language?: Language;
+}) {
+  const tr = t(language);
+
   if (findings.length === 0) {
-    return (
-      <p className="hint">
-        Pehra found nothing in this text that it could tie to a provision it
-        knows. That is not a clean bill of health - it may mean the document
-        falls outside what Pehra covers. Take it to a legal aid lawyer.
-      </p>
-    );
+    return <p className="hint">{tr.findingsEmpty}</p>;
   }
 
   return (
     <div className="annotated">
       {findings.map((finding, index) => {
         const noteId = `finding-note-${index}`;
-        const caution = CONFIDENCE_NOTE[finding.confidence];
+        const caution = tr.confidenceNotes[finding.confidence];
+        const statute = getStatute(finding.statute.id, language) ?? finding.statute;
 
         return (
           <article
@@ -44,7 +43,7 @@ export function Findings({ findings }: { findings: readonly GroundedFinding[] })
               {finding.verdict === "missing" ? (
                 <>
                   <span className="visually-hidden">
-                    Not present in the document:
+                    {tr.absentProtectionAria}
                   </span>
                   {finding.clause}
                 </>
@@ -54,15 +53,15 @@ export function Findings({ findings }: { findings: readonly GroundedFinding[] })
             </blockquote>
 
             <div className="finding-note" id={noteId}>
-              <VerdictBadge verdict={finding.verdict} />
+              <VerdictBadge verdict={finding.verdict} language={language} />
               <p>{finding.explanation}</p>
               {caution ? <p className="hint">{caution}</p> : null}
               <div className="source">
-                <cite>{finding.statute.citation}</cite>
-                {finding.statute.plain}
+                <cite>{statute.citation}</cite>
+                {statute.plain}
                 <p style={{ marginTop: "0.5rem", marginBottom: 0 }}>
-                  <strong>What that means for you: </strong>
-                  {finding.statute.soWhat}
+                  <strong>{tr.whatMeansForYou}</strong>
+                  {statute.soWhat}
                 </p>
               </div>
             </div>

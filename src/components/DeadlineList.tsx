@@ -1,14 +1,18 @@
 import type { Deadline } from "@/lib/clock";
+import type { Language } from "@/lib/schema";
+import { t } from "@/lib/i18n/translations";
 
-export function DeadlineList({ deadlines }: { deadlines: readonly Deadline[] }) {
+export function DeadlineList({
+  deadlines,
+  language = "en",
+}: {
+  deadlines: readonly Deadline[];
+  language?: Language;
+}) {
+  const tr = t(language).deadlines;
+
   if (deadlines.length === 0) {
-    return (
-      <p className="hint">
-        No dates were written in this document, so there is no clock to run yet.
-        If you know the date the problem started, add it to the text and read it
-        again.
-      </p>
-    );
+    return <p className="hint">{tr.empty}</p>;
   }
 
   return (
@@ -21,10 +25,11 @@ export function DeadlineList({ deadlines }: { deadlines: readonly Deadline[] }) 
           <br />
           <span className="hint">
             {deadline.daysRemaining < 0
-              ? `Closed ${Math.abs(deadline.daysRemaining)} days ago. `
-              : `${deadline.daysRemaining} days remaining. `}
-            Counted from: {deadline.sourceEvent.description} (
-            {deadline.sourceEvent.date}). {deadline.basis}
+              ? tr.closedDaysAgo(Math.abs(deadline.daysRemaining))
+              : tr.remainingDays(deadline.daysRemaining)}
+            {tr.countedFrom}
+            {deadline.sourceEvent.description} ({deadline.sourceEvent.date}).{" "}
+            {deadline.basis}
           </span>
         </li>
       ))}

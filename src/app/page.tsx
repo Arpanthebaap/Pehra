@@ -9,6 +9,7 @@ import { redact, type Redaction } from "@/lib/redact";
 import { MAX_DOCUMENT_CHARS, type GroundedFinding, type Language } from "@/lib/schema";
 import type { Deadline } from "@/lib/clock";
 import { SAMPLE_RENT_AGREEMENT } from "@/lib/samples";
+import { t } from "@/lib/i18n/translations";
 
 interface AnalysisResult {
   documentKind: string;
@@ -110,6 +111,7 @@ export default function Home() {
 
   const tooShort = text.trim().length > 0 && text.trim().length < 40;
   const tooLong = text.length > MAX_DOCUMENT_CHARS;
+  const tr = t(language);
 
   return (
     <div className="shell">
@@ -121,14 +123,12 @@ export default function Home() {
             </span>
             Pehra
           </h1>
-          <p className="tagline">
-            Read the paperwork before it reads you. Built for India.
-          </p>
+          <p className="tagline">{tr.tagline}</p>
         </div>
 
         <div className="masthead-tools">
           <span id="textsize-label" className="visually-hidden">
-            Text size
+            {tr.textSize}
           </span>
           <div role="group" aria-labelledby="textsize-label">
             {(["normal", "large", "xlarge"] as const).map((size) => (
@@ -148,18 +148,12 @@ export default function Home() {
 
       <main id="main">
         <section className="section" style={{ marginTop: "2rem" }}>
-          <h2>What are you being asked to sign?</h2>
-          <p className="hint">
-            Paste a rent agreement, a job contract, a loan document, an app&rsquo;s
-            terms, or a legal notice you have received. Pehra reads it against
-            Indian law and tells you three things: which clauses cannot bind you,
-            which protections are missing, and which deadlines are already
-            running against you.
-          </p>
+          <h2>{tr.formHeading}</h2>
+          <p className="hint">{tr.formHint}</p>
 
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", margin: "1.25rem 0 0.5rem" }}>
             <div>
-              <label htmlFor={languageId}>Answer me in</label>
+              <label htmlFor={languageId}>{tr.languageSelectLabel}</label>
               <select
                 id={languageId}
                 value={language}
@@ -175,21 +169,18 @@ export default function Home() {
           </div>
 
           <label htmlFor={textareaId} style={{ marginTop: "1rem" }}>
-            The document
+            {tr.documentLabel}
           </label>
           <textarea
             id={textareaId}
             value={text}
             onChange={(event) => setText(event.target.value)}
-            placeholder="Paste the text here."
+            placeholder={tr.placeholder}
             aria-describedby={`${textareaId}-help`}
             spellCheck={false}
           />
           <p id={`${textareaId}-help`} className="hint">
-            Nothing you paste is stored. Aadhaar numbers, PAN, phone numbers,
-            email addresses and account numbers are masked in your browser before
-            the text is sent anywhere. Pattern matching is not perfect, so remove
-            anything you would not want read by a stranger.
+            {tr.privacyHint}
           </p>
 
           <div className="actions">
@@ -199,7 +190,7 @@ export default function Home() {
               onClick={() => void analyse()}
               disabled={busy || tooShort || tooLong || text.trim().length === 0}
             >
-              {busy ? "Reading…" : "Read this document"}
+              {busy ? tr.btnReading : tr.btnRead}
             </button>
             <button
               type="button"
@@ -209,17 +200,17 @@ export default function Home() {
                 setError(null);
               }}
             >
-              Load an example
+              {tr.btnExample}
             </button>
             <span className="counter" aria-live="polite">
-              {text.length.toLocaleString("en-IN")} / {MAX_DOCUMENT_CHARS.toLocaleString("en-IN")} characters
-              {tooShort ? " — too short to read" : ""}
-              {tooLong ? " — too long, paste the parts you are worried about" : ""}
+              {text.length.toLocaleString("en-IN")} / {MAX_DOCUMENT_CHARS.toLocaleString("en-IN")} {tr.characters}
+              {tooShort ? tr.tooShort : ""}
+              {tooLong ? tr.tooLong : ""}
             </span>
           </div>
         </section>
 
-        <Disclaimer />
+        <Disclaimer language={language} />
 
         <div
           ref={resultsRef}
@@ -228,63 +219,55 @@ export default function Home() {
           aria-busy={busy}
           style={{ outline: "none" }}
         >
-          {busy ? <p className="hint">Reading the document against Indian law…</p> : null}
+          {busy ? <p className="hint">{tr.analyzingHint}</p> : null}
 
           {error ? (
             <div className="notice error" role="alert">
-              <h2 style={{ fontSize: "1.0625rem" }}>Pehra stopped</h2>
+              <h2 style={{ fontSize: "1.0625rem" }}>{tr.stoppedHeading}</h2>
               <p>{error}</p>
             </div>
           ) : null}
 
           {result ? (
             <>
-              {result.urgent ? <ClockHero deadline={result.urgent} /> : null}
+              {result.urgent ? (
+                <ClockHero deadline={result.urgent} language={language} />
+              ) : null}
 
               <section className="section">
-                <h2>What this document is</h2>
+                <h2>{tr.summaryHeading}</h2>
                 <p>{result.summary}</p>
                 <button type="button" onClick={speak}>
-                  Read this aloud
+                  {tr.btnSpeak}
                 </button>
               </section>
 
               {redactions.length > 0 ? (
                 <p className="hint">
-                  Masked before sending:{" "}
+                  {tr.maskedPrefix}
                   {redactions.map((r) => `${r.count} × ${r.label}`).join(", ")}.
                 </p>
               ) : null}
 
               <section className="section">
-                <h2>Clause by clause</h2>
-                <p className="hint">
-                  Struck-through backgrounds mark protections that are absent
-                  from the document rather than present in it.
-                </p>
-                <Findings findings={result.findings} />
+                <h2>{tr.clausesHeading}</h2>
+                <p className="hint">{tr.clausesHint}</p>
+                <Findings findings={result.findings} language={language} />
                 {result.ungroundedClaimsDiscarded > 0 ? (
                   <p className="hint">
-                    Pehra dropped {result.ungroundedClaimsDiscarded} finding
-                    {result.ungroundedClaimsDiscarded === 1 ? "" : "s"} it could
-                    not tie to a specific provision. It would rather say less
-                    than say something you might act on and find is not the law.
+                    {tr.discardedHint(result.ungroundedClaimsDiscarded)}
                   </p>
                 ) : null}
               </section>
 
               <section className="section">
-                <h2>Clocks that are already running</h2>
-                <DeadlineList deadlines={result.deadlines} />
+                <h2>{tr.deadlinesHeading}</h2>
+                <DeadlineList deadlines={result.deadlines} language={language} />
               </section>
 
               <section className="section">
-                <h2>Take these questions to a lawyer</h2>
-                <p className="hint">
-                  Legal aid is free if you qualify under s. 12 of the Legal
-                  Services Authorities Act. Walk into the District Legal Services
-                  Authority at your district court, or call 15100.
-                </p>
+                <h2>{tr.questionsHeading}</h2>
+                <p className="hint">{tr.legalAidHint}</p>
                 <ul className="plain">
                   {result.questionsForALawyer.map((question) => (
                     <li key={question}>{question}</li>
@@ -297,11 +280,7 @@ export default function Home() {
       </main>
 
       <footer>
-        <p>
-          Pehra reads against a fixed corpus of Indian statutory provisions and
-          cites every one of them. It never stores your document. Analysis is
-          generated by Google Gemini and constrained to that corpus.
-        </p>
+        <p>{tr.footerText}</p>
       </footer>
     </div>
   );

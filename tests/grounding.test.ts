@@ -88,3 +88,39 @@ describe("corpus integrity", () => {
     for (const id of STATUTE_IDS) expect(briefing).toContain(id);
   });
 });
+
+describe("multilingual statute localization", () => {
+  it("localizes statute titles, plain readings, and consequences into Hindi", () => {
+    const statuteHi = getStatute("mta-2021-s11", "hi");
+    expect(statuteHi).toBeDefined();
+    expect(statuteHi?.citation).toContain("मॉडल");
+    expect(statuteHi?.title).toContain("सुरक्षा जमा");
+    expect(statuteHi?.plain).toContain("मॉडल टेनेंसी एक्ट");
+    expect(statuteHi?.soWhat).toContain("मॉडल टेनेंसी एक्ट");
+  });
+
+  it("localizes statute titles, plain readings, and consequences into Bengali", () => {
+    const statuteBn = getStatute("mta-2021-s11", "bn");
+    expect(statuteBn).toBeDefined();
+    expect(statuteBn?.citation).toContain("মডেল");
+    expect(statuteBn?.title).toContain("জামানত");
+    expect(statuteBn?.plain).toContain("ভাড়া");
+    expect(statuteBn?.soWhat).toContain("মডেল টেন্যান্সি অ্যাক্ট");
+  });
+
+  it("attaches localized statutes through groundFindings when language is specified", () => {
+    const { findings: findingsHi } = groundFindings(
+      [finding({ statuteId: "ica-1872-s74" })],
+      "hi",
+    );
+    expect(findingsHi[0]?.statute.title).toContain("जुर्माना");
+    expect(findingsHi[0]?.statute.citation).toContain("भारतीय अनुबंध अधिनियम");
+
+    const { findings: findingsBn } = groundFindings(
+      [finding({ statuteId: "ica-1872-s74" })],
+      "bn",
+    );
+    expect(findingsBn[0]?.statute.title).toContain("জরিমানা");
+    expect(findingsBn[0]?.statute.citation).toContain("ভারতীয় চুক্তি আইন");
+  });
+});

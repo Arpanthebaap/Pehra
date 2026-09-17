@@ -135,3 +135,39 @@ describe("the clock speaks in days, not jargon", () => {
     expect(screen.getByText(/convention rather than statute/i)).toBeInTheDocument();
   });
 });
+
+describe("multilingual rendering and accessibility", () => {
+  it("renders Findings in Hindi without WCAG violations", async () => {
+    const { container } = render(<Findings findings={findings} language="hi" />);
+    await expectNoViolations(container);
+    expect(screen.getByText("आप पर बाध्यकारी नहीं है")).toBeInTheDocument();
+    expect(screen.getAllByText(/आपके लिए इसका क्या मतलब है/i).length).toBeGreaterThan(0);
+  });
+
+  it("renders Findings in Bengali without WCAG violations", async () => {
+    const { container } = render(<Findings findings={findings} language="bn" />);
+    await expectNoViolations(container);
+    expect(screen.getByText("আপনার জন্য বাধ্যতামূলক নয়")).toBeInTheDocument();
+    expect(screen.getAllByText(/আপনার জন্য এর অর্থ/i).length).toBeGreaterThan(0);
+  });
+
+  it("renders ClockHero in Hindi and Bengali without WCAG violations", async () => {
+    const { container: containerHi } = render(<ClockHero deadline={deadline} language="hi" />);
+    await expectNoViolations(containerHi);
+    expect(screen.getByText(/दिन बचे हैं/i)).toBeInTheDocument();
+
+    const { container: containerBn } = render(<ClockHero deadline={deadline} language="bn" />);
+    await expectNoViolations(containerBn);
+    expect(screen.getByText(/দিন বাকি আছে/i)).toBeInTheDocument();
+  });
+
+  it("renders Disclaimer in Hindi and Bengali without WCAG violations", async () => {
+    const { container: containerHi } = render(<Disclaimer language="hi" />);
+    await expectNoViolations(containerHi);
+    expect(screen.getByText("पहरा आपका वकील नहीं है")).toBeInTheDocument();
+
+    const { container: containerBn } = render(<Disclaimer language="bn" />);
+    await expectNoViolations(containerBn);
+    expect(screen.getByText("পাহারা আপনার আইনজীবী নয়")).toBeInTheDocument();
+  });
+});

@@ -1,4 +1,5 @@
-import type { Verdict } from "@/lib/schema";
+import type { Language, Verdict } from "@/lib/schema";
+import { t } from "@/lib/i18n/translations";
 
 /**
  * Verdict wording is deliberately written as a statement about the reader's
@@ -12,10 +13,17 @@ const LABELS: Record<Verdict, string> = {
   missing: "Protection missing",
 };
 
-export function VerdictBadge({ verdict }: { verdict: Verdict }) {
+export function VerdictBadge({
+  verdict,
+  language = "en",
+}: {
+  verdict: Verdict;
+  language?: Language;
+}) {
+  const label = t(language).verdictLabels[verdict];
   return (
     <span className="verdict" data-verdict={verdict}>
-      {LABELS[verdict]}
+      {label}
     </span>
   );
 }

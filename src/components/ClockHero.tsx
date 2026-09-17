@@ -1,13 +1,16 @@
 import type { Deadline } from "@/lib/clock";
+import type { Language } from "@/lib/schema";
+import { getStatute } from "@/lib/corpus/statutes";
+import { t } from "@/lib/i18n/translations";
 
-function phrase(deadline: Deadline): string {
+function phrase(deadline: Deadline, language: Language = "en"): string {
   const days = deadline.daysRemaining;
+  const tr = t(language).clockHero;
   if (days < 0) {
-    const overdue = Math.abs(days);
-    return `That window closed ${overdue} ${overdue === 1 ? "day" : "days"} ago`;
+    return tr.closedDaysAgo(Math.abs(days));
   }
-  if (days === 0) return "Today is the last day";
-  return `${days} ${days === 1 ? "day" : "days"} left`;
+  if (days === 0) return tr.lastDay;
+  return tr.daysLeft(days);
 }
 
 /**
@@ -17,24 +20,36 @@ function phrase(deadline: Deadline): string {
  * clock is the thing people most often lose a winnable case to, and the thing
  * they are least likely to know about.
  */
-export function ClockHero({ deadline }: { deadline: Deadline }) {
+export function ClockHero({
+  deadline,
+  language = "en",
+}: {
+  deadline: Deadline;
+  language?: Language;
+}) {
+  const tr = t(language);
+  const statute = deadline.statute
+    ? getStatute(deadline.statute.id, language) ?? deadline.statute
+    : null;
+
   return (
     <section
       className="clock-hero"
       data-status={deadline.status}
       aria-labelledby="clock-heading"
     >
-      <h2 id="clock-heading">{phrase(deadline)}</h2>
+      <h2 id="clock-heading">{phrase(deadline, language)}</h2>
       <p>
-        {deadline.action}. The date to work to is{" "}
-        <strong>{deadline.dueDate}</strong>.
+        {deadline.action}
+        {language === "hi" ? "। " : language === "bn" ? "। " : ". "}
+        {tr.clockHero.dateToWorkTo}{" "}
+        <strong>{deadline.dueDate}</strong>
+        {language === "hi" ? " है।" : language === "bn" ? "।" : "."}
       </p>
       <p className="basis">
         {deadline.basis}
-        {deadline.statute ? ` (${deadline.statute.citation})` : ""}
-        {deadline.customary
-          ? " This one is convention rather than statute - check the document for the exact period it gives you."
-          : ""}
+        {statute ? ` (${statute.citation})` : ""}
+        {deadline.customary ? tr.clockHero.customaryNotice : ""}
       </p>
     </section>
   );

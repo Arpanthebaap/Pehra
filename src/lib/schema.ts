@@ -94,7 +94,10 @@ export interface GroundingResult {
  * `standard` findings are exempt: asserting that a clause is ordinary and needs
  * no action is not a legal claim that requires authority.
  */
-export function groundFindings(findings: readonly ModelFinding[]): GroundingResult {
+export function groundFindings(
+  findings: readonly ModelFinding[],
+  language: Language = "en",
+): GroundingResult {
   const kept: GroundedFinding[] = [];
   let discarded = 0;
 
@@ -105,7 +108,7 @@ export function groundFindings(findings: readonly ModelFinding[]): GroundingResu
       discarded += 1;
       continue;
     }
-    const statute = getStatute(finding.statuteId);
+    const statute = getStatute(finding.statuteId, language);
     if (!statute) {
       discarded += 1;
       continue;

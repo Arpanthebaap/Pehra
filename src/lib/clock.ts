@@ -10,7 +10,7 @@
  * a calendar date, not an instant.
  */
 
-import { getStatute, type Statute } from "./corpus/statutes";
+import { getStatute, type Statute, type StatuteLanguage } from "./corpus/statutes";
 
 /** Events a document or a user's account of events can give rise to. */
 export type EventKind =
@@ -55,6 +55,78 @@ interface Rule {
   customary?: boolean;
   basis: string;
 }
+
+const RULE_TRANSLATIONS: Record<
+  "hi" | "bn",
+  Record<string, { action: string; basis: string }>
+> = {
+  hi: {
+    "cpa-complaint": {
+      action: "अपनी उपभोक्ता शिकायत दर्ज करें",
+      basis: "विवाद (वाद हेतुक) उत्पन्न होने की तारीख से दो वर्ष।",
+    },
+    "contract-suit": {
+      action: "अनुबंध के उल्लंघन के लिए दीवानी मुकदमा दर्ज करें",
+      basis: "अनुबंध टूटने की तारीख से तीन वर्ष।",
+    },
+    "ni-demand": {
+      action: "चेक देने वाले व्यक्ति को लिखित मांग नोटिस भेजें",
+      basis: "बैंक से चेक रिटर्न मेमो प्राप्त होने के तीस दिन।",
+    },
+    "ni-complaint-window": {
+      action:
+        "अपनी शिकायत दर्ज करने की तैयारी रखें - यह मांग नोटिस के 15 दिन बाद देय होती है, और उसके बाद के एक महीने के भीतर दर्ज की जानी चाहिए",
+      basis:
+        "मांग के लिए 30 दिन, फिर भुगतान के लिए 15 दिन, फिर शिकायत दर्ज करने के लिए एक महीना। सटीक तारीखों की पुष्टि किसी वकील से करें।",
+    },
+    "notice-reply": {
+      action: "इस कानूनी नोटिस का लिखित जवाब भेजें",
+      basis:
+        "अधिकांश नोटिस 15-30 दिनों का समय देते हैं। यह प्रथागत है, कानून नहीं - सटीक अवधि के लिए नोटिस को ध्यान से पढ़ें।",
+    },
+    "appeal-state": {
+      action: "राज्य उपभोक्ता आयोग में अपील दर्ज करें",
+      basis: "जिला आयोग के आदेश से पैंतालीस दिन।",
+    },
+    "appeal-national": {
+      action: "राष्ट्रीय उपभोक्ता आयोग में अपील दर्ज करें",
+      basis: "राज्य आयोग के आदेश से तीस दिन।",
+    },
+  },
+  bn: {
+    "cpa-complaint": {
+      action: "আপনার ভোক্তা অভিযোগ দায়ের করুন",
+      basis: "অভিযোগের কারণ উদ্ভব হওয়ার তারিখ থেকে দুই বছর।",
+    },
+    "contract-suit": {
+      action: "চুক্তি লঙ্ঘনের জন্য দেওয়ানি মামলা দায়ের করুন",
+      basis: "চুক্তি ভঙ্গের তারিখ থেকে তিন বছর।",
+    },
+    "ni-demand": {
+      action: "চেক প্রদানকারী ব্যক্তিকে লিখিত ডিমান্ড নোটিশ পাঠান",
+      basis: "ব্যাংকের চেক রিটার্ন মেমো পাওয়ার পর থেকে ত্রিশ দিন।",
+    },
+    "ni-complaint-window": {
+      action:
+        "অভিযোগ দায়েরের প্রস্তুতি রাখুন - ডিমান্ড নোটিশের ১৫ দিন পর এটি প্রযোজ্য হয় এবং পরবর্তী এক মাসের মধ্যে দায়ের করতে হবে",
+      basis:
+        "নোটিশের জন্য ৩০ দিন, তারপর পরিশোধের জন্য ১৫ দিন, এরপর মামলা করার জন্য এক মাস। সুনির্দিষ্ট তারিখের জন্য একজন আইনজীবীর পরামর্শ নিন।",
+    },
+    "notice-reply": {
+      action: "এই আইনি নোটিশের একটি লিখিত জবাব পাঠান",
+      basis:
+        "অধিকাংশ নোটিশে ১৫-৩০ দিন সময় দেওয়া হয়। এটি প্রচলিত প্রথা, আইন নয় - নির্দিষ্ট সময় জানার জন্য নোটিশটি পড়ুন।",
+    },
+    "appeal-state": {
+      action: "রাজ্য ভোক্তা কমিশনে আপিল দায়ের করুন",
+      basis: "জেলা কমিশনের আদেশের তারিখ থেকে পঁয়তাল্লিশ দিন।",
+    },
+    "appeal-national": {
+      action: "জাতীয় ভোক্তা কমিশনে আপিল দায়ের করুন",
+      basis: "রাজ্য কমিশনের আদেশের তারিখ থেকে ত্রিশ দিন।",
+    },
+  },
+};
 
 /**
  * Statutory windows, in days from the triggering event.
@@ -171,7 +243,11 @@ export function statusFor(daysRemaining: number): ClockStatus {
  * Sorting puts whatever is closest to running out at the top, because that is
  * the only thing most people have the attention to act on.
  */
-export function buildClock(events: readonly LegalEvent[], today: Date): Deadline[] {
+export function buildClock(
+  events: readonly LegalEvent[],
+  today: Date,
+  language: StatuteLanguage = "en",
+): Deadline[] {
   const deadlines: Deadline[] = [];
 
   for (const event of events) {
@@ -184,15 +260,19 @@ export function buildClock(events: readonly LegalEvent[], today: Date): Deadline
     for (const rule of rules) {
       const due = addDays(eventDate, rule.days);
       const daysRemaining = daysBetween(today, due);
+      const trans = language !== "en" ? RULE_TRANSLATIONS[language]?.[rule.id] : undefined;
+      const action = trans?.action ?? rule.action;
+      const basis = trans?.basis ?? rule.basis;
+
       deadlines.push({
         id: `${rule.id}:${event.date}`,
-        action: rule.action,
+        action,
         dueDate: toIsoDate(due),
         daysRemaining,
         status: statusFor(daysRemaining),
-        statute: rule.statuteId ? (getStatute(rule.statuteId) ?? null) : null,
+        statute: rule.statuteId ? (getStatute(rule.statuteId, language) ?? null) : null,
         customary: rule.customary === true,
-        basis: rule.basis,
+        basis,
         sourceEvent: event,
       });
     }

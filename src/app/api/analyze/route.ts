@@ -54,8 +54,8 @@ export async function POST(request: Request) {
   try {
     const output = await analyzeDocument({ text, language, today: todayIso });
 
-    const { findings, discarded } = groundFindings(output.findings);
-    const deadlines = buildClock(output.events, today);
+    const { findings, discarded } = groundFindings(output.findings, language);
+    const deadlines = buildClock(output.events, today, language);
 
     return NextResponse.json(
       {

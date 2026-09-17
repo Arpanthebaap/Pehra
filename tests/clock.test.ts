@@ -9,6 +9,7 @@ import {
   toIsoDate,
   type LegalEvent,
 } from "@/lib/clock";
+import { deadlinePhrase } from "@/components/ClockHero";
 
 const utc = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 
@@ -157,5 +158,66 @@ describe("mostUrgent", () => {
 
   it("returns null when there is nothing to report", () => {
     expect(mostUrgent([])).toBeNull();
+  });
+});
+
+describe("multilingual clock engine", () => {
+  const today = utc("2026-09-16");
+
+  it("localizes clock action, basis, and attached statute into Hindi", () => {
+    const events: LegalEvent[] = [
+      {
+        kind: "consumer_cause_of_action",
+        date: "2026-01-12",
+        description: "Deposit paid, possession not given",
+      },
+    ];
+    const [deadline] = buildClock(events, today, "hi");
+    expect(deadline?.action).toBe("अपनी उपभोक्ता शिकायत दर्ज करें");
+    expect(deadline?.basis).toContain("विवाद (वाद हेतुक) उत्पन्न होने की तारीख से दो वर्ष");
+    expect(deadline?.statute?.citation).toContain("उपभोक्ता संरक्षण अधिनियम");
+  });
+
+  it("localizes clock action, basis, and attached statute into Bengali", () => {
+    const events: LegalEvent[] = [
+      {
+        kind: "consumer_cause_of_action",
+        date: "2026-01-12",
+        description: "Deposit paid, possession not given",
+      },
+    ];
+    const [deadline] = buildClock(events, today, "bn");
+    expect(deadline?.action).toBe("আপনার ভোক্তা অভিযোগ দায়ের করুন");
+    expect(deadline?.basis).toContain("অভিযোগের কারণ উদ্ভব হওয়ার তারিখ থেকে দুই বছর");
+    expect(deadline?.statute?.citation).toContain("ভোক্তা সুরক্ষা আইন");
+  });
+
+  it("localizes deadlinePhrase across languages", () => {
+    const events: LegalEvent[] = [
+      {
+        kind: "consumer_cause_of_action",
+        date: "2026-01-12",
+        description: "Deposit paid",
+      },
+    ];
+    const [deadlineEn] = buildClock(events, today, "en");
+    const [deadlineHi] = buildClock(events, today, "hi");
+    const [deadlineBn] = buildClock(events, today, "bn");
+
+    expect(deadlinePhrase(deadlineEn!, "en")).toContain("left");
+    expect(deadlinePhrase(deadlineHi!, "hi")).toContain("दिन बचे हैं");
+    expect(deadlinePhrase(deadlineBn!, "bn")).toContain("দিন বাকি আছে");
+
+    // Overdue
+    const overdueDeadline = { ...deadlineEn!, daysRemaining: -5, status: "expired" as const };
+    expect(deadlinePhrase(overdueDeadline, "en")).toBe("That window closed 5 days ago");
+    expect(deadlinePhrase(overdueDeadline, "hi")).toBe("यह समय सीमा 5 दिन पहले समाप्त हो चुकी है");
+    expect(deadlinePhrase(overdueDeadline, "bn")).toBe("এই সময়সীমা 5 দিন আগে শেষ হয়েছে");
+
+    // Last day
+    const lastDayDeadline = { ...deadlineEn!, daysRemaining: 0, status: "critical" as const };
+    expect(deadlinePhrase(lastDayDeadline, "en")).toBe("Today is the last day");
+    expect(deadlinePhrase(lastDayDeadline, "hi")).toBe("आज आखिरी दिन है");
+    expect(deadlinePhrase(lastDayDeadline, "bn")).toBe("আজই শেষ দিন");
   });
 });
