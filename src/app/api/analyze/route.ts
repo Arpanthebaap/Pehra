@@ -20,6 +20,12 @@ function fail(message: string, status: number, extra: HeadersInit = {}) {
 }
 
 export async function POST(request: Request) {
+  // Prevent cross-site abuse via Fetch Metadata
+  const secFetchSite = request.headers.get("sec-fetch-site");
+  if (secFetchSite === "cross-site") {
+    return fail("Cross-site requests are not permitted.", 403);
+  }
+
   const limit = rateLimit(clientKey(request.headers));
   if (!limit.allowed) {
     return fail(

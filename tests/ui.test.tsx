@@ -64,4 +64,32 @@ describe("Home Page & Sample Picker Interaction", () => {
     fireEvent.change(textarea, { target: { value: "A".repeat(50) } });
     expect(analyzeBtn).not.toBeDisabled();
   });
+
+  it("switches to contract comparison mode and loads comparison presets", () => {
+    render(<Home />);
+    const compareTabBtn = screen.getByRole("tab", { name: /compare contracts/i });
+    expect(compareTabBtn).toBeInTheDocument();
+
+    fireEvent.click(compareTabBtn);
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: /compare two contract versions or policies/i }),
+    ).toBeInTheDocument();
+
+    // Check compare preset button
+    const tenancyPresetBtn = screen.getByRole("button", { name: /tenancy renewal vs original lease/i });
+    expect(tenancyPresetBtn).toBeInTheDocument();
+
+    // Click preset
+    fireEvent.click(tenancyPresetBtn);
+
+    const origInput = screen.getByLabelText(/original agreement/i) as HTMLTextAreaElement;
+    const modInput = screen.getByLabelText(/renewal \/ amendment/i) as HTMLTextAreaElement;
+
+    expect(origInput.value).toContain("RESIDENTIAL TENANCY LEASE (ORIGINAL");
+    expect(modInput.value).toContain("RESIDENTIAL TENANCY LEASE (REVISED RENEWAL");
+
+    const compareBtn = screen.getByRole("button", { name: /compare both documents/i });
+    expect(compareBtn).not.toBeDisabled();
+  });
 });

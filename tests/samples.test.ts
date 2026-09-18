@@ -52,4 +52,31 @@ describe("sample documents suite", () => {
     expect(SAMPLE_CONSUMER_WARRANTY).toContain("SEVEN-DAY REPLACEMENT BAR");
     expect(SAMPLE_CONSUMER_WARRANTY).toContain("Consumer Protection Act, 2019");
   });
+
+  it("verifies comparison samples suite contains valid original and modified texts", async () => {
+    const { COMPARISON_SAMPLES } = await import("@/lib/samples");
+    expect(COMPARISON_SAMPLES.length).toBeGreaterThanOrEqual(2);
+
+    for (const item of COMPARISON_SAMPLES) {
+      expect(item.originalText.length).toBeGreaterThanOrEqual(30);
+      expect(item.modifiedText.length).toBeGreaterThanOrEqual(30);
+      expect(item.title.en).toBeTruthy();
+      expect(item.title.hi).toBeTruthy();
+      expect(item.title.bn).toBeTruthy();
+    }
+  });
+
+  it("verifies quick questions suite is properly localized", async () => {
+    const { QUICK_QUESTIONS } = await import("@/lib/samples");
+    expect(QUICK_QUESTIONS.length).toBeGreaterThanOrEqual(4);
+
+    for (const q of QUICK_QUESTIONS) {
+      expect(q.label.en).toBeTruthy();
+      expect(q.label.hi).toBeTruthy();
+      expect(q.label.bn).toBeTruthy();
+      expect(q.question.en).toBeTruthy();
+      expect(q.question.hi).toBeTruthy();
+      expect(q.question.bn).toBeTruthy();
+    }
+  });
 });

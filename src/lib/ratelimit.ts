@@ -82,16 +82,29 @@ export function getTrackedKeyCount(): number {
   return windows.size;
 }
 
+const IP_V4_REGEX = /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d)$/;
+const IP_V6_REGEX = /^[0-9a-fA-F:]{2,39}$/;
+
+export function isValidIp(ip: string): boolean {
+  return IP_V4_REGEX.test(ip) || IP_V6_REGEX.test(ip);
+}
+
 /**
- * Derives a limiter key from proxy headers. Falls back to a shared bucket
- * rather than to a per-request random value, so a missing header degrades
- * towards stricter limiting rather than towards none.
+ * Derives a limiter key from proxy headers. Validates IP syntax to prevent
+ * header injection and spoofing. Falls back to a shared bucket rather than to
+ * a per-request random value, so missing headers degrade towards stricter limiting.
  */
 export function clientKey(headers: Headers): string {
+  const cfConnectingIp = headers.get("cf-connecting-ip")?.trim();
+  if (cfConnectingIp && isValidIp(cfConnectingIp)) return cfConnectingIp;
+
+  const realIp = headers.get("x-real-ip")?.trim();
+  if (realIp && isValidIp(realIp)) return realIp;
+
   const forwarded = headers.get("x-forwarded-for");
   if (forwarded) {
     const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
+    if (first && isValidIp(first)) return first;
   }
-  return headers.get("x-real-ip")?.trim() || "anonymous";
+  return "anonymous";
 }

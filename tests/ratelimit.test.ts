@@ -61,6 +61,23 @@ describe("clientKey", () => {
     expect(clientKey(new Headers({ "x-real-ip": "8.8.8.8" }))).toBe("8.8.8.8");
   });
 
+  it("prioritizes cf-connecting-ip when present and valid", () => {
+    expect(
+      clientKey(
+        new Headers({
+          "cf-connecting-ip": "1.1.1.1",
+          "x-real-ip": "8.8.8.8",
+          "x-forwarded-for": "9.9.9.9",
+        }),
+      ),
+    ).toBe("1.1.1.1");
+  });
+
+  it("rejects invalid or spoofed non-IP characters and falls back", () => {
+    const headers = new Headers({ "x-forwarded-for": "malicious<script>alert(1)</script>" });
+    expect(clientKey(headers)).toBe("anonymous");
+  });
+
   it("degrades to a shared bucket rather than to no limiting at all", () => {
     expect(clientKey(new Headers())).toBe("anonymous");
   });

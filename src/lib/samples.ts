@@ -194,3 +194,129 @@ export const SAMPLE_DOCUMENTS: readonly SampleDocument[] = [
     text: SAMPLE_CONSUMER_WARRANTY,
   },
 ];
+
+export interface ComparisonSample {
+  id: string;
+  title: Record<Language, string>;
+  description: Record<Language, string>;
+  originalText: string;
+  modifiedText: string;
+}
+
+export const COMPARISON_SAMPLES: ComparisonSample[] = [
+  {
+    id: "tenancy_renewal",
+    title: {
+      en: "Tenancy Renewal vs Original Lease",
+      hi: "किराया नवीनीकरण बनाम मूल अनुबंध",
+      bn: "ভাড়া চুক্তি পুনর্নবীকরণ বনাম মূল চুক্তি",
+    },
+    description: {
+      en: "Landlord increased deposit to 10 months, removed 30-day notice, and added power/water shutoff rights.",
+      hi: "मकान मालिक ने 10 महीने की जमानत राशि मांगी, 30 दिन का नोटिस हटाया और बिजली-पानी काटने का अधिकार जोड़ा।",
+      bn: "বাড়িওয়ালা ১০ মাসের জামানত দাবি করেছে, ৩০ দিনের নোটিশ বাতিল করেছে এবং বিদ্যুৎ-জল কাটার অধিকার যুক্ত করেছে।",
+    },
+    originalText: `RESIDENTIAL TENANCY LEASE (ORIGINAL - 2025)
+Date: 1st April 2025. Between Shri S. Sharma (Landlord) and Sri A. Roy (Tenant).
+1. RENT & DEPOSIT: Monthly rent is Rs. 20,000 payable on 5th of each month. Security deposit is Rs. 40,000 (two months rent), refundable within 15 days of vacating.
+2. NOTICE & TERMINATION: Either party may terminate this agreement by giving 30 days written notice.
+3. ENTRY & PRIVACY: Landlord may inspect the premises with 24 hours prior notice at reasonable daytime hours.
+4. UTILITIES & SERVICES: Landlord shall ensure regular supply of electricity and municipal water.
+5. MAINTENANCE: Major structural repairs shall be borne by the Landlord; minor wear by Tenant.`,
+    modifiedText: `RESIDENTIAL TENANCY LEASE (REVISED RENEWAL - 2026)
+Date: 1st April 2026. Between Shri S. Sharma (Landlord) and Sri A. Roy (Tenant).
+1. RENT & DEPOSIT: Monthly rent is Rs. 26,000. Tenant must deposit an additional Rs. 2,00,000, bringing total deposit to Rs. 2,40,000 (ten months rent). Deposit is non-interest bearing and subject to blanket forfeiture at Landlord's discretion.
+2. NOTICE & TERMINATION: Landlord may terminate this agreement with 24 hours notice without assigning reasons. Tenant cannot terminate before 12 months without complete deposit forfeiture.
+3. ENTRY & PRIVACY: Landlord or his representatives may enter the premises at any hour without prior notice.
+4. UTILITIES & DISCONNECTION: In case of rent delay beyond the 3rd of any month, Landlord reserves absolute right to disconnect water and electricity supplies immediately.
+5. REPAIRS: All structural and external repairs must be carried out by Tenant at Tenant's sole expense.
+6. DISPUTES: Tenant undertakes not to approach any Rent Authority, Civil Court, or Consumer Forum.`,
+  },
+  {
+    id: "employment_amendment",
+    title: {
+      en: "Employment Amendment vs Offer Letter",
+      hi: "नौकरी संशोधन बनाम मूल नियुक्ति पत्र",
+      bn: "চাকরির সংশোধন বনাম মূল নিয়োগপত্র",
+    },
+    description: {
+      en: "Employer inserted 2-year post-job non-compete restraint, Rs. 3.5 Lakh penalty bond, and wage deductions.",
+      hi: "नियोक्ता ने 2 साल का गैर-प्रतिस्पर्धा प्रतिबंध, 3.5 लाख का बॉन्ड और वेतन से कटौती की शर्तें जोड़ीं।",
+      bn: "নিয়োগকারী ২ বছরের কর্মসংস্থান নিষেধাজ্ঞা, ৩.৫ লাখ টাকার বন্ড জরিমানা এবং বেতন কর্তনের শর্ত চাপিয়েছে।",
+    },
+    originalText: `APPOINTMENT LETTER (ORIGINAL OFFER - 2025)
+Date: 10th January 2025. Nexa Dynamics Pvt Ltd (Employer) and Ms. P. Verma (Employee).
+1. DESIGNATION & SALARY: Junior Developer at gross monthly salary of Rs. 35,000.
+2. PROBATION & NOTICE: 3 months probation. Either party may terminate with 30 days written notice or pay in lieu thereof.
+3. CONFIDENTIALITY: Employee agrees to preserve confidentiality of proprietary code and customer records.
+4. INTELLECTUAL PROPERTY: Work product created during work hours for the Employer belongs to the Employer.`,
+    modifiedText: `EMPLOYMENT CONTRACT AMENDMENT & SERVICE BOND (REVISION - 2026)
+Date: 10th January 2026. Nexa Dynamics Pvt Ltd (Employer) and Ms. P. Verma (Employee).
+1. DESIGNATION & SALARY: Software Developer at gross monthly salary of Rs. 45,000.
+2. MANDATORY BOND & PENALTY: Employee covenants to serve for minimum 36 months continuously. If Employee resigns or leaves before 36 months, Employee must pay Rs. 3,50,000 as liquidated damages and training costs, regardless of whether any training was conducted.
+3. POST-TERMINATION NON-COMPETE: For 24 months following cessation of employment for any reason, Employee is strictly prohibited from working with or consulting for any tech company anywhere in India.
+4. SALARY DEDUCTIONS: Employer reserves unconditional right to deduct up to 40% of monthly salary for project delays or reserve funds without notice.
+5. DISPUTES: Employee agrees not to seek redress before any Labour Court or Civil Court.`,
+  },
+];
+
+export interface QuickQuestion {
+  id: string;
+  label: Record<Language, string>;
+  question: Record<Language, string>;
+}
+
+export const QUICK_QUESTIONS: QuickQuestion[] = [
+  {
+    id: "q_deposit",
+    label: {
+      en: "Deposit Forfeiture",
+      hi: "जमानत राशि ज़ब्ती",
+      bn: "জামানত অর্থ বাজেয়াপ্ত",
+    },
+    question: {
+      en: "Can the other party forfeit my entire security deposit without proving actual financial loss?",
+      hi: "क्या दूसरा पक्ष वास्तविक वित्तीय नुकसान साबित किए बिना मेरी पूरी सुरक्षा जमा राशि ज़ब्त कर सकता है?",
+      bn: "অপর পক্ষ কি প্রকৃত আর্থিক ক্ষতি প্রমাণ না করে আমার সম্পূর্ণ জামানতের টাকা বাজেয়াপ্ত করতে পারে?",
+    },
+  },
+  {
+    id: "q_noncompete",
+    label: {
+      en: "Non-Compete Legality",
+      hi: "गैर-प्रतिस्पर्धा वैधता",
+      bn: "নন-কম্পিট ক্লজের বৈধতা",
+    },
+    question: {
+      en: "Is the post-termination non-compete clause legally binding or enforceable against me under Indian law?",
+      hi: "क्या नौकरी छोड़ने के बाद गैर-प्रतिस्पर्धा खंड भारतीय कानून के तहत मुझ पर कानूनी रूप से लागू हो सकता है?",
+      bn: "চাকরি ছাড়ার পর প্রতিযোগিতামূলক সংস্থায় কাজে যোগ না দেওয়ার শর্তটি কি ভারতীয় আইনে বৈধ?",
+    },
+  },
+  {
+    id: "q_deadlines",
+    label: {
+      en: "Deadlines & Next Steps",
+      hi: "समय सीमा व आगे के कदम",
+      bn: "সময়সীমা ও পরবর্তী পদক্ষেপ",
+    },
+    question: {
+      en: "What are the strict statutory deadlines or reply time limits mentioned in or triggered by this document?",
+      hi: "इस दस्तावेज़ में उल्लिखित या इसके कारण शुरू होने वाली सख्त कानूनी समय-सीमाएं या जवाब देने की अंतिम तिथि क्या है?",
+      bn: "এই নথিতে উল্লিখিত বা এর প্রেক্ষিতে আমার জন্য নির্দিষ্ট আইনি সময়সীমা বা পদক্ষেপের শেষ তারিখ কী?",
+    },
+  },
+  {
+    id: "q_waiver",
+    label: {
+      en: "Court/Forum Waivers",
+      hi: "अदालत जाने पर रोक",
+      bn: "আদালত বর্জনের শর্ত",
+    },
+    question: {
+      en: "Can a clause prevent me from approaching consumer commissions or courts if a dispute arises?",
+      hi: "क्या कोई खंड विवाद होने पर मुझे उपभोक्ता अदालत या न्यायालय जाने से रोक सकता है?",
+      bn: "কোনো শর্ত কি আমাকে বিরোধ দেখা দিলে ভোক্তা আদালত বা কোর্টে যাওয়া থেকে আটকাতে পারে?",
+    },
+  },
+];
