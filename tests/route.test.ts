@@ -53,6 +53,30 @@ const MOCK_MODEL_OUTPUT: ModelOutput = {
     "Can the landlord legally forfeit my deposit without proof of damage?",
     "How can I recover possession or get a refund of the advance paid?",
   ],
+  inconsistencies: [
+    {
+      clauseA: "Rent is Rs. 15,000 per month",
+      clauseB: "Forfeiture of entire Rs. 1,50,000 deposit on early exit",
+      explanation: "Deposit forfeiture penalty contradicts standard notice exit.",
+      severity: "high",
+    },
+  ],
+  optionsAndNextSteps: [
+    {
+      category: "negotiation",
+      title: "Demand Clause Strikeout",
+      description: "Ask landlord to delete blanket forfeiture clause under ICA s. 74.",
+      actionableStep: "Issue a written request stating Section 74 prohibits unproved penalties.",
+    },
+  ],
+  actionableChecklist: [
+    {
+      id: "task-1",
+      task: "Collect bank transfer receipt for Rs. 1,50,000",
+      priority: "urgent",
+      category: "Evidence",
+    },
+  ],
 };
 
 describe("POST /api/analyze", () => {
@@ -181,5 +205,8 @@ describe("POST /api/analyze", () => {
     expect(json.deadlines.length).toBeGreaterThan(0);
     expect(json.questionsForALawyer).toEqual(MOCK_MODEL_OUTPUT.questionsForALawyer);
     expect(json.ungroundedClaimsDiscarded).toBe(0);
+    expect(Array.isArray(json.inconsistencies)).toBe(true);
+    expect(Array.isArray(json.optionsAndNextSteps)).toBe(true);
+    expect(Array.isArray(json.actionableChecklist)).toBe(true);
   });
 });

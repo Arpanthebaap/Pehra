@@ -63,16 +63,43 @@ export const modelEventSchema = z.object({
   description: z.string().min(1).max(500),
 });
 
+export const modelInconsistencySchema = z.object({
+  clauseA: z.string().min(1).max(1000),
+  clauseB: z.string().min(1).max(1000),
+  explanation: z.string().min(1).max(1000),
+  severity: z.enum(["high", "medium"]),
+});
+
+export const modelOptionSchema = z.object({
+  category: z.enum(["negotiation", "dispute_resolution", "legal_aid", "pre_signing"]),
+  title: z.string().min(1).max(300),
+  description: z.string().min(1).max(1000),
+  actionableStep: z.string().min(1).max(500),
+});
+
+export const modelChecklistItemSchema = z.object({
+  id: z.string(),
+  task: z.string().min(1).max(400),
+  priority: z.enum(["urgent", "recommended", "optional"]),
+  category: z.string(),
+});
+
 export const modelOutputSchema = z.object({
   documentKind: z.enum(DOCUMENT_KINDS),
   summary: z.string().min(1).max(2000),
   findings: z.array(modelFindingSchema).max(30),
   events: z.array(modelEventSchema).max(20),
   questionsForALawyer: z.array(z.string().min(1).max(400)).max(10),
+  inconsistencies: z.array(modelInconsistencySchema).max(10).default([]),
+  optionsAndNextSteps: z.array(modelOptionSchema).max(10).default([]),
+  actionableChecklist: z.array(modelChecklistItemSchema).max(15).default([]),
 });
 
 export type ModelOutput = z.infer<typeof modelOutputSchema>;
 export type ModelFinding = z.infer<typeof modelFindingSchema>;
+export type ModelInconsistency = z.infer<typeof modelInconsistencySchema>;
+export type ModelOption = z.infer<typeof modelOptionSchema>;
+export type ModelChecklistItem = z.infer<typeof modelChecklistItemSchema>;
 
 export interface GroundedFinding extends Omit<ModelFinding, "statuteId"> {
   statute: Statute;

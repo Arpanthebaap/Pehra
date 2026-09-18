@@ -967,8 +967,223 @@ footer {
 
 @media (max-width: 768px) {
   .compare-inputs-grid,
-  .change-diff-grid {
+  .change-diff-grid,
+  .inc-diff-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---- Clause-against-Clause Inconsistencies ---------------------------- */
+
+.inconsistencies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.inconsistency-card {
+  border: 1px solid var(--rule, #e5e5e0);
+  border-left: 4px solid #f97316;
+  border-radius: 6px;
+  padding: 1rem;
+  background: var(--paper, #fff);
+}
+
+.inc-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.inc-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.inc-badge-high {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.inc-badge-medium {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fdba74;
+}
+
+.inc-diff-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.inc-clause-col {
+  background: var(--paper-warm, #f7f6f2);
+  padding: 0.75rem;
+  border-radius: 4px;
+}
+
+.inc-explanation {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* ---- Legal Options & Next Steps Cards --------------------------------- */
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.option-card {
+  border: 1px solid var(--rule, #e5e5e0);
+  border-radius: 8px;
+  padding: 1.15rem;
+  background: var(--paper, #fff);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.option-category-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1e40af;
+  background: #dbeafe;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  align-self: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.option-title {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.option-description {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ink-secondary, #57534e);
+  margin: 0 0 0.75rem;
+}
+
+.option-action-step {
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--paper-warm, #f7f6f2);
+  border-radius: 4px;
+  border-left: 3px solid #059669;
+  line-height: 1.45;
+}
+
+/* ---- Literal Interactive Checklist ----------------------------------- */
+
+.checklist-interactive-section {
+  margin-top: 2rem;
+  border-top: 2px solid var(--rule, #e5e5e0);
+  padding-top: 1.5rem;
+}
+
+.checklist-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.checklist-progress-pill {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+.checklist-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checklist-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--paper, #fff);
+  border: 1px solid var(--rule, #e5e5e0);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.checklist-item-row:hover {
+  background: var(--paper-warm, #f7f6f2);
+}
+
+.checklist-item-row.checked {
+  opacity: 0.65;
+  background: #f8fafc;
+}
+
+.checklist-item-row.checked .checklist-task-text {
+  text-decoration: line-through;
+}
+
+.checklist-checkbox {
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+  accent-color: #059669;
+}
+
+.checklist-item-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.checklist-priority-badge {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.priority-urgent {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.priority-recommended {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.priority-optional {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.checklist-task-text {
+  font-size: 0.9375rem;
+  color: var(--ink, #1c1917);
 }
 

@@ -63,6 +63,21 @@ export interface UiTranslations {
   qaStatuteHeading: string;
   qaLegalAidHeading: string;
   quickQuestionsLabel: string;
+  inconsistenciesHeading: string;
+  inconsistenciesHint: string;
+  inconsistenciesEmpty: string;
+  optionsHeading: string;
+  optionsHint: string;
+  optionCategoryLabels: {
+    negotiation: string;
+    dispute_resolution: string;
+    legal_aid: string;
+    pre_signing: string;
+  };
+  actionableChecklistHeading: string;
+  checklistProgress: (done: number, total: number) => string;
+  btnDownloadBrief: string;
+  downloadedToast: string;
   verdictLabels: Record<Verdict, string>;
   confidenceNotes: {
     high: null;
@@ -164,6 +179,24 @@ export const TRANSLATIONS: Record<Language, UiTranslations> = {
     qaStatuteHeading: "Applicable Indian Law & Protection",
     qaLegalAidHeading: "Questions for Legal Aid (NALSA 15100)",
     quickQuestionsLabel: "Suggested questions:",
+    inconsistenciesHeading: "Clause-against-clause Inconsistencies & Contradictions",
+    inconsistenciesHint:
+      "Pehra checks the document for internal contradictions — clauses where one term grants a right or notice period that another term silently takes away or conflicts with.",
+    inconsistenciesEmpty: "No internal clause-against-clause contradictions detected.",
+    optionsHeading: "Your Legal Options & Potential Next Steps",
+    optionsHint:
+      "Practical paths you can choose depending on whether you have already signed or are negotiating before signing.",
+    optionCategoryLabels: {
+      negotiation: "Negotiation & Redlining",
+      dispute_resolution: "Dispute Redressal & Consumer Forum",
+      legal_aid: "Free Legal Aid (NALSA 15100)",
+      pre_signing: "Pre-signing Protective Steps",
+    },
+    actionableChecklistHeading: "Actionable Legal Checklist",
+    checklistProgress: (done: number, total: number) =>
+      `${done} of ${total} action items completed`,
+    btnDownloadBrief: "Download Case Brief (.txt)",
+    downloadedToast: "Case brief downloaded to your device",
     verdictLabels: {
       void: "Not binding on you",
       one_sided: "Legal, but weighted against you",
@@ -273,6 +306,24 @@ export const TRANSLATIONS: Record<Language, UiTranslations> = {
     qaStatuteHeading: "लागू भारतीय कानून व सुरक्षा",
     qaLegalAidHeading: "कानूनी सहायता के लिए प्रश्न (नालसा 15100)",
     quickQuestionsLabel: "सुझाए गए प्रश्न:",
+    inconsistenciesHeading: "धारा-बनाम-धारा आंतरिक अंतर्विरोध व विसंगतियां",
+    inconsistenciesHint:
+      "पहरा दस्तावेज़ की आंतरिक विसंगतियों की जांच करता है — जहां एक खंड अधिकार या नोटिस अवधि देता है और दूसरा खंड चुपके से उसे छीन लेता है।",
+    inconsistenciesEmpty: "इस दस्तावेज़ में कोई आंतरिक अंतर्विरोध नहीं मिला।",
+    optionsHeading: "आपके कानूनी विकल्प व संभावित अगले कदम",
+    optionsHint:
+      "व्यावहारिक रास्ते जो आप हस्ताक्षर करने से पहले या बाद में अपना सकते हैं।",
+    optionCategoryLabels: {
+      negotiation: "बातचीत व संशोधन (रेडलाइनिंग)",
+      dispute_resolution: "विवाद निवारण व उपभोक्ता फोरम",
+      legal_aid: "मुफ्त कानूनी सहायता (नालसा 15100)",
+      pre_signing: "हस्ताक्षर से पहले सुरक्षात्मक कदम",
+    },
+    actionableChecklistHeading: "कार्रवाई योग्य कानूनी चेकलिस्ट",
+    checklistProgress: (done: number, total: number) =>
+      `${total} में से ${done} कार्य पूरे हुए`,
+    btnDownloadBrief: "केस विवरण डाउनलोड करें (.txt)",
+    downloadedToast: "केस विवरण आपके डिवाइस पर डाउनलोड हो गया",
     verdictLabels: {
       void: "आप पर बाध्यकारी नहीं है",
       one_sided: "कानूनी है, पर आपके विरुद्ध झुका हुआ है",
@@ -381,6 +432,24 @@ export const TRANSLATIONS: Record<Language, UiTranslations> = {
     qaStatuteHeading: "প্রযোজ্য ভারতীয় আইন ও সুরক্ষা",
     qaLegalAidHeading: "আইনি সহায়তার কাছে রাখার মতো প্রশ্ন (নালসা ১৫১০০)",
     quickQuestionsLabel: "প্রস্তাবিত প্রশ্নাবলী:",
+    inconsistenciesHeading: "ধারা-বনাম-ধারা অভ্যন্তরীণ অসঙ্গতি ও বিরোধ",
+    inconsistenciesHint:
+      "পাহারা নথির ভেতরের পরস্পরবিরোধী ধারা চিহ্নিত করে — যেখানে একটি শর্ত কোনো অধিকার বা নোটিশের সুযোগ দেয় কিন্তু অন্য কোনো শর্ত গোপনে তা বাতিল করে।",
+    inconsistenciesEmpty: "এই নথিতে কোনো অভ্যন্তরীণ পরস্পরবিরোধী শর্ত পাওয়া যায়নি।",
+    optionsHeading: "আপনার আইনি বিকল্প ও সম্ভাব্য পরবর্তী পদক্ষেপ",
+    optionsHint:
+      "স্বাক্ষর করার আগে বা স্বাক্ষর করার পর আপনার গ্রহণ করার মতো বাস্তবিক পদক্ষেপসমূহ।",
+    optionCategoryLabels: {
+      negotiation: "আলোচনা ও সংশোধন (রেডলাইনিং)",
+      dispute_resolution: "বিরোধ নিষ্পত্তি ও ভোক্তা আদালত",
+      legal_aid: "বিনামূল্যে আইনি সহায়তা (নালসা ১৫১০০)",
+      pre_signing: "স্বাক্ষর করার আগের সতর্কতামূলক পদক্ষেপ",
+    },
+    actionableChecklistHeading: "কার্যকরী আইনি চেকলিস্ট",
+    checklistProgress: (done: number, total: number) =>
+      `${total}টির মধ্যে ${done}টি কাজ সম্পন্ন হয়েছে`,
+    btnDownloadBrief: "কেস বিবরণ ডাউনলোড করুন (.txt)",
+    downloadedToast: "কেস বিবরণ আপনার ডিভাইসে ডাউনলোড হয়েছে",
     verdictLabels: {
       void: "আপনার জন্য বাধ্যতামূলক নয়",
       one_sided: "আইনগত, তবে আপনার প্রতিকূলে ঝুঁকে রয়েছে",

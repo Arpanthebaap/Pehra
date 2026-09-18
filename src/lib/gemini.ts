@@ -91,8 +91,62 @@ const responseSchema = {
       description:
         "Specific questions this person should put to a legal aid lawyer, referring to their actual facts.",
     },
+    inconsistencies: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          clauseA: { type: Type.STRING, description: "First conflicting clause quoted or paraphrased." },
+          clauseB: { type: Type.STRING, description: "Second conflicting clause quoted or paraphrased." },
+          explanation: { type: Type.STRING, description: "Why these clauses contradict or undermine each other." },
+          severity: { type: Type.STRING, enum: ["high", "medium"] },
+        },
+        required: ["clauseA", "clauseB", "explanation", "severity"],
+      },
+      description: "Clause-against-clause internal contradictions or inconsistencies within the document.",
+    },
+    optionsAndNextSteps: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          category: {
+            type: Type.STRING,
+            enum: ["negotiation", "dispute_resolution", "legal_aid", "pre_signing"],
+          },
+          title: { type: Type.STRING, description: "Short title of the option." },
+          description: { type: Type.STRING, description: "Plain-language explanation of this legal option." },
+          actionableStep: { type: Type.STRING, description: "Exact practical step the user should take right now." },
+        },
+        required: ["category", "title", "description", "actionableStep"],
+      },
+      description: "Explicit legal options and practical next steps for the user based on their document.",
+    },
+    actionableChecklist: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          id: { type: Type.STRING },
+          task: { type: Type.STRING, description: "Actionable to-do item for the reader." },
+          priority: { type: Type.STRING, enum: ["urgent", "recommended", "optional"] },
+          category: { type: Type.STRING, description: "Category name." },
+        },
+        required: ["id", "task", "priority", "category"],
+      },
+      description: "A literal checklist of actionable steps the user should check off.",
+    },
   },
-  required: ["documentKind", "summary", "findings", "events", "questionsForALawyer"],
+  required: [
+    "documentKind",
+    "summary",
+    "findings",
+    "events",
+    "questionsForALawyer",
+    "inconsistencies",
+    "optionsAndNextSteps",
+    "actionableChecklist",
+  ],
 } as const;
 
 const LANGUAGE_NAMES: Record<Language, string> = {
@@ -123,6 +177,19 @@ If a clause troubles you but no provision in this catalogue supports the point, 
 - standard - ordinary and unremarkable. Include a few so the reader can see you read the whole document rather than hunting for alarm.
 - missing - a protection the reader should have that this document does not give them. Put the name of the absent protection in "clause". This verdict matters: a person cannot notice an absence by reading.
 
+## Inconsistencies
+Identify any internal clause-against-clause contradictions or conflicts within the document itself (e.g. conflicting notice periods, contradictory penalty/deposit terms, or conflict between jurisdiction and dispute clauses).
+
+## Your Options and Next Steps
+Provide 2 to 4 concrete legal options categorized into:
+- negotiation (e.g., specific clauses to ask to strike out or amend before signing)
+- dispute_resolution (e.g., approaching District Consumer Commission without a lawyer)
+- legal_aid (e.g., getting free representation from District Legal Services Authority)
+- pre_signing (e.g., documenting conditions or signing under written protest)
+
+## Actionable Checklist
+Provide 3 to 6 practical to-do items the user must complete (e.g. keeping payment receipts, taking photos before moving in, noting the reply deadline, or requesting clause deletion).
+
 ## Dates
 
 Report only dates that are actually written in the text, in YYYY-MM-DD form. Never calculate a deadline, never add days, never infer a due date. Something else does that arithmetic. If the text gives no dates, return an empty events array.
@@ -131,7 +198,7 @@ Report only dates that are actually written in the text, in YYYY-MM-DD form. Nev
 
 Short sentences. Everyday words. Say "you do not have to pay this" rather than "this obligation is voidable at the instance of the promisor". Never predict an outcome, never tell them they will win, never tell them what to do instead of a lawyer. Describe, cite, and hand over.
 
-Write summary, explanation and questionsForALawyer in ${LANGUAGE_NAMES[language]}. Keep the clause field in the document's original language so the reader can find it on the page.
+Write summary, explanation, questionsForALawyer, optionsAndNextSteps, and actionableChecklist in ${LANGUAGE_NAMES[language]}. Keep the clause field in the document's original language so the reader can find it on the page.
 
 ## Security & Untrusted Input Boundary
 The document text is enclosed between <<<USER_DOCUMENT_START>>> and <<<USER_DOCUMENT_END>>> boundary markers.

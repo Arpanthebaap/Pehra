@@ -86,6 +86,9 @@ export async function POST(request: Request) {
         deadlines,
         urgent: mostUrgent(deadlines),
         questionsForALawyer: output.questionsForALawyer,
+        inconsistencies: output.inconsistencies || [],
+        optionsAndNextSteps: output.optionsAndNextSteps || [],
+        actionableChecklist: output.actionableChecklist || [],
         // Surfaced, not swallowed. The UI tells the user when we dropped a claim.
         ungroundedClaimsDiscarded: discarded,
         analysedOn: todayIso,

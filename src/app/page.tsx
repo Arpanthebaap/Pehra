@@ -8,7 +8,14 @@ import { Findings } from "@/components/Findings";
 import { ComparisonView } from "@/components/ComparisonView";
 import { DocumentQA } from "@/components/DocumentQA";
 import { redact, type Redaction } from "@/lib/redact";
-import { MAX_DOCUMENT_CHARS, type GroundedFinding, type Language } from "@/lib/schema";
+import {
+  MAX_DOCUMENT_CHARS,
+  type GroundedFinding,
+  type Language,
+  type ModelInconsistency,
+  type ModelOption,
+  type ModelChecklistItem,
+} from "@/lib/schema";
 import type { Deadline } from "@/lib/clock";
 import type { ComparisonResult } from "@/lib/compare";
 import { SAMPLE_DOCUMENTS, COMPARISON_SAMPLES } from "@/lib/samples";
@@ -21,6 +28,9 @@ interface AnalysisResult {
   deadlines: Deadline[];
   urgent: Deadline | null;
   questionsForALawyer: string[];
+  inconsistencies: ModelInconsistency[];
+  optionsAndNextSteps: ModelOption[];
+  actionableChecklist: ModelChecklistItem[];
   ungroundedClaimsDiscarded: number;
   analysedOn: string;
 }
@@ -40,6 +50,107 @@ const SPEECH_LOCALE: Record<Language, string> = {
   bn: "bn-IN",
 };
 
+function buildBriefingText(
+  result: AnalysisResult,
+  checkedTasks: Record<string, boolean>,
+): string {
+  const lines: string[] = [
+    `================================================================`,
+    `               PEHRA LEGAL AID INTAKE BRIEF & ACTION PACKET     `,
+    `================================================================`,
+    `Date of Analysis: ${result.analysedOn}`,
+    `Document Category: ${result.documentKind}`,
+    `Platform: Pehra Watchkeeper (https://pehra-zeta.vercel.app)`,
+    ``,
+    `1. EXECUTIVE SUMMARY:`,
+    result.summary,
+    ``,
+  ];
+
+  if (result.urgent) {
+    lines.push(
+      `2. URGENT STATUTORY LIMITATION CLOCK:`,
+      `ACTION REQUIRED: ${result.urgent.action}`,
+      `REMAINING TIME: ${result.urgent.daysRemaining} days remaining (Target Due Date: ${result.urgent.dueDate})`,
+      `LEGAL BASIS: ${result.urgent.basis}`,
+      ``,
+    );
+  }
+
+  if (result.deadlines && result.deadlines.length > 0) {
+    lines.push(`ALL STATUTORY CLOCKS & LIMITATION PERIODS:`);
+    result.deadlines.forEach((d, i) => {
+      lines.push(
+        `${i + 1}. [${d.action}] - ${d.daysRemaining} days remaining (Target: ${d.dueDate})`,
+      );
+      lines.push(`   Basis: ${d.basis}`);
+    });
+    lines.push(``);
+  }
+
+  const criticalFindings = result.findings.filter(
+    (f) => f.verdict === "void" || f.verdict === "missing" || f.verdict === "one_sided",
+  );
+  if (criticalFindings.length > 0) {
+    lines.push(`3. CLAUSE-BY-CLAUSE VERDICTS & STATUTORY CITATIONS:`);
+    for (const f of criticalFindings) {
+      lines.push(`- [VERDICT: ${f.verdict.toUpperCase()}] "${f.clause}"`);
+      lines.push(`  Statutory Authority: ${f.statute.citation} (${f.statute.title})`);
+      lines.push(`  Plain Takeaway: ${f.explanation}`);
+    }
+    lines.push(``);
+  }
+
+  if (result.inconsistencies && result.inconsistencies.length > 0) {
+    lines.push(`4. CLAUSE-AGAINST-CLAUSE INCONSISTENCIES & CONFLICTS:`);
+    result.inconsistencies.forEach((inc, i) => {
+      lines.push(`Conflict #${i + 1} [Severity: ${inc.severity.toUpperCase()}]:`);
+      lines.push(`  Clause A: "${inc.clauseA}"`);
+      lines.push(`  Clause B: "${inc.clauseB}"`);
+      lines.push(`  Explanation: ${inc.explanation}`);
+    });
+    lines.push(``);
+  }
+
+  if (result.optionsAndNextSteps && result.optionsAndNextSteps.length > 0) {
+    lines.push(`5. YOUR LEGAL OPTIONS & POTENTIAL NEXT STEPS:`);
+    result.optionsAndNextSteps.forEach((opt, i) => {
+      lines.push(`Option #${i + 1} [${opt.category.toUpperCase()}]: ${opt.title}`);
+      lines.push(`  Overview: ${opt.description}`);
+      lines.push(`  Action Step: ${opt.actionableStep}`);
+    });
+    lines.push(``);
+  }
+
+  if (result.actionableChecklist && result.actionableChecklist.length > 0) {
+    lines.push(`6. ACTIONABLE CLIENT CHECKLIST:`);
+    result.actionableChecklist.forEach((item, i) => {
+      const mark = checkedTasks[item.id] ? "[X] COMPLETED" : "[ ] PENDING";
+      lines.push(`${i + 1}. ${mark} (${item.priority.toUpperCase()}) ${item.task}`);
+    });
+    lines.push(``);
+  }
+
+  if (result.questionsForALawyer.length > 0) {
+    lines.push(`7. SPECIFIC QUESTIONS FOR YOUR LEGAL AID LAWYER:`);
+    result.questionsForALawyer.forEach((q, idx) => {
+      lines.push(`${idx + 1}. ${q}`);
+    });
+    lines.push(``);
+  }
+
+  lines.push(
+    `================================================================`,
+    `FREE LEGAL AID HELPLINE: NALSA (National Legal Services Authority): 15100`,
+    `District Legal Services Authority (DLSA) is located in every District Court.`,
+    `Free legal representation is a statutory right under s. 12 of the`,
+    `Legal Services Authorities Act, 1987.`,
+    `================================================================`,
+  );
+
+  return lines.join("\n");
+}
+
 export default function Home() {
   const [activeMode, setActiveMode] = useState<ActiveMode>("analyze");
   const [text, setText] = useState("");
@@ -50,6 +161,8 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [redactions, setRedactions] = useState<Redaction[]>([]);
   const [copiedToast, setCopiedToast] = useState(false);
+  const [downloadedToast, setDownloadedToast] = useState(false);
+  const [checkedTasks, setCheckedTasks] = useState<Record<string, boolean>>({});
 
   // Comparison mode state
   const [originalText, setOriginalText] = useState("");
@@ -83,9 +196,14 @@ export default function Home() {
     window.speechSynthesis.speak(utterance);
   }, [result, language]);
 
+  const toggleTask = useCallback((id: string) => {
+    setCheckedTasks((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
+
   const analyse = useCallback(async () => {
     setError(null);
     setResult(null);
+    setCheckedTasks({});
 
     const { text: safeText, redactions: found } = redact(text);
     setRedactions(found);
@@ -191,6 +309,7 @@ export default function Home() {
     setText(sampleText);
     setResult(null);
     setError(null);
+    setCheckedTasks({});
   }, []);
 
   const loadComparisonSample = useCallback((orig: string, mod: string) => {
@@ -209,58 +328,38 @@ export default function Home() {
     return c;
   }, [result]);
 
+  const completedTaskCount = useMemo(() => {
+    if (!result || !result.actionableChecklist) return 0;
+    return result.actionableChecklist.filter((item) => !!checkedTasks[item.id]).length;
+  }, [result, checkedTasks]);
+
   const copyBriefing = useCallback(async () => {
     if (!result) return;
-    const lines: string[] = [
-      `=== PEHRA LEGAL AID INTAKE BRIEFING ===`,
-      `Date: ${result.analysedOn}`,
-      `Document Kind: ${result.documentKind}`,
-      ``,
-      `SUMMARY:`,
-      result.summary,
-      ``,
-    ];
-
-    if (result.urgent) {
-      lines.push(
-        `URGENT STATUTORY DEADLINE:`,
-        `${result.urgent.action} (${result.urgent.daysRemaining} days remaining - target: ${result.urgent.dueDate})`,
-        `Basis: ${result.urgent.basis}`,
-        ``,
-      );
-    }
-
-    const criticalFindings = result.findings.filter(
-      (f) => f.verdict === "void" || f.verdict === "missing" || f.verdict === "one_sided",
-    );
-    if (criticalFindings.length > 0) {
-      lines.push(`KEY CLAUSES & STATUTORY CITATIONS:`);
-      for (const f of criticalFindings) {
-        lines.push(`- [${f.verdict.toUpperCase()}] ${f.clause}`);
-        lines.push(`  Citation: ${f.statute.citation} (${f.statute.title})`);
-        lines.push(`  Takeaway: ${f.explanation}`);
-      }
-      lines.push(``);
-    }
-
-    if (result.questionsForALawyer.length > 0) {
-      lines.push(`QUESTIONS FOR LEGAL AID LAWYER:`);
-      result.questionsForALawyer.forEach((q, idx) => {
-        lines.push(`${idx + 1}. ${q}`);
-      });
-      lines.push(``);
-    }
-
-    lines.push(`NALSA Helpline: 15100 | Legal Services Authorities Act, 1987, s. 12`);
-
+    const textToCopy = buildBriefingText(result, checkedTasks);
     try {
-      await navigator.clipboard.writeText(lines.join("\n"));
+      await navigator.clipboard.writeText(textToCopy);
       setCopiedToast(true);
       setTimeout(() => setCopiedToast(false), 2500);
     } catch {
       // Fallback
     }
-  }, [result]);
+  }, [result, checkedTasks]);
+
+  const downloadBrief = useCallback(() => {
+    if (!result) return;
+    const textToDownload = buildBriefingText(result, checkedTasks);
+    const blob = new Blob([textToDownload], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `pehra-case-brief-${result.analysedOn}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setDownloadedToast(true);
+    setTimeout(() => setDownloadedToast(false), 2500);
+  }, [result, checkedTasks]);
 
   const tooShort = text.trim().length > 0 && text.trim().length < 40;
   const tooLong = text.length > MAX_DOCUMENT_CHARS;
@@ -500,7 +599,7 @@ export default function Home() {
                   <ClockHero deadline={result.urgent} language={language} />
                 ) : null}
 
-                {/* Actionable Legal Checklist */}
+                {/* Actionable Legal Checklist & Export Card */}
                 <div className="checklist-card" role="region" aria-label={tr.checklistTitle}>
                   <h3 style={{ margin: "0 0 0.5rem" }}>{tr.checklistTitle}</h3>
                   <div className="checklist-grid">
@@ -537,9 +636,21 @@ export default function Home() {
                     >
                       📋 {tr.btnCopyBriefing}
                     </button>
+                    <button
+                      type="button"
+                      className="btn-secondary btn-download"
+                      onClick={() => void downloadBrief()}
+                    >
+                      💾 {tr.btnDownloadBrief}
+                    </button>
                     {copiedToast ? (
                       <span className="toast-feedback" role="status">
                         ✓ {tr.copiedBriefing}
+                      </span>
+                    ) : null}
+                    {downloadedToast ? (
+                      <span className="toast-feedback" role="status">
+                        ✓ {tr.downloadedToast}
                       </span>
                     ) : null}
                   </div>
@@ -560,6 +671,7 @@ export default function Home() {
                   </p>
                 ) : null}
 
+                {/* CLAUSE-BY-CLAUSE FINDINGS */}
                 <section className="section">
                   <h2>{tr.clausesHeading}</h2>
                   <p className="hint">{tr.clausesHint}</p>
@@ -571,11 +683,108 @@ export default function Home() {
                   ) : null}
                 </section>
 
+                {/* CLAUSE-AGAINST-CLAUSE INCONSISTENCIES */}
+                {result.inconsistencies && result.inconsistencies.length > 0 ? (
+                  <section className="section" role="region" aria-label={tr.inconsistenciesHeading}>
+                    <h2>⚠️ {tr.inconsistenciesHeading} ({result.inconsistencies.length})</h2>
+                    <p className="hint">{tr.inconsistenciesHint}</p>
+                    <div className="inconsistencies-list">
+                      {result.inconsistencies.map((inc, i) => (
+                        <article key={i} className={`inconsistency-card inc-${inc.severity}`}>
+                          <div className="inc-header">
+                            <span className={`inc-badge inc-badge-${inc.severity}`}>
+                              {inc.severity === "high" ? "High Contradiction" : "Clause Conflict"}
+                            </span>
+                          </div>
+                          <div className="inc-diff-grid">
+                            <div className="inc-clause-col">
+                              <span className="diff-label">Clause Term A</span>
+                              <blockquote className="diff-quote">{inc.clauseA}</blockquote>
+                            </div>
+                            <div className="inc-clause-col">
+                              <span className="diff-label">Conflicting Clause Term B</span>
+                              <blockquote className="diff-quote">{inc.clauseB}</blockquote>
+                            </div>
+                          </div>
+                          <p className="inc-explanation">
+                            <strong>Contradiction: </strong>{inc.explanation}
+                          </p>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+
+                {/* YOUR LEGAL OPTIONS & POTENTIAL NEXT STEPS */}
+                {result.optionsAndNextSteps && result.optionsAndNextSteps.length > 0 ? (
+                  <section className="section" role="region" aria-label={tr.optionsHeading}>
+                    <h2>🧭 {tr.optionsHeading}</h2>
+                    <p className="hint">{tr.optionsHint}</p>
+                    <div className="options-grid">
+                      {result.optionsAndNextSteps.map((opt, i) => (
+                        <article key={i} className="option-card">
+                          <div className="option-category-badge">
+                            {tr.optionCategoryLabels[opt.category] || opt.category}
+                          </div>
+                          <h3 className="option-title">{opt.title}</h3>
+                          <p className="option-description">{opt.description}</p>
+                          <div className="option-action-step">
+                            <strong>👉 Practical Step: </strong>{opt.actionableStep}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+
+                {/* LITERAL ACTIONABLE CHECKLIST */}
+                {result.actionableChecklist && result.actionableChecklist.length > 0 ? (
+                  <section
+                    className="section checklist-interactive-section"
+                    role="region"
+                    aria-label={tr.actionableChecklistHeading}
+                  >
+                    <div className="checklist-header-row">
+                      <h2>✅ {tr.actionableChecklistHeading}</h2>
+                      <span className="checklist-progress-pill">
+                        {tr.checklistProgress(completedTaskCount, result.actionableChecklist.length)}
+                      </span>
+                    </div>
+
+                    <div className="checklist-items-list" role="list">
+                      {result.actionableChecklist.map((item) => {
+                        const isChecked = !!checkedTasks[item.id];
+                        return (
+                          <label
+                            key={item.id}
+                            className={`checklist-item-row ${isChecked ? "checked" : ""}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleTask(item.id)}
+                              className="checklist-checkbox"
+                            />
+                            <div className="checklist-item-content">
+                              <span className={`checklist-priority-badge priority-${item.priority}`}>
+                                {item.priority.toUpperCase()}
+                              </span>
+                              <span className="checklist-task-text">{item.task}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ) : null}
+
+                {/* DEADLINES AND CLOCKS */}
                 <section className="section">
                   <h2>{tr.deadlinesHeading}</h2>
                   <DeadlineList deadlines={result.deadlines} language={language} />
                 </section>
 
+                {/* QUESTIONS FOR LEGAL AID LAWYER */}
                 <section className="section">
                   <h2>{tr.questionsHeading}</h2>
                   <p className="hint">{tr.legalAidHint}</p>
@@ -586,7 +795,7 @@ export default function Home() {
                   </ul>
                 </section>
 
-                {/* Interactive Document Q&A Section */}
+                {/* INTERACTIVE DOCUMENT Q&A */}
                 <DocumentQA documentText={text} language={language} />
               </>
             ) : null}
