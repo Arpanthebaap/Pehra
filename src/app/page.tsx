@@ -257,8 +257,9 @@ export default function Home() {
     setCompareError(null);
     setComparisonResult(null);
 
-    const { text: safeOrig } = redact(originalText);
-    const { text: safeMod } = redact(modifiedText);
+    const { text: safeOrig, redactions: origR } = redact(originalText);
+    const { text: safeMod, redactions: modR } = redact(modifiedText);
+    setRedactions([...origR, ...modR]);
 
     const cacheKey = `${language}:${safeOrig}:::${safeMod}`;
     if (comparisonCache.current.has(cacheKey)) {
@@ -309,6 +310,7 @@ export default function Home() {
     setText(sampleText);
     setResult(null);
     setError(null);
+    setRedactions([]);
     setCheckedTasks({});
   }, []);
 
@@ -317,6 +319,7 @@ export default function Home() {
     setModifiedText(mod);
     setComparisonResult(null);
     setCompareError(null);
+    setRedactions([]);
   }, []);
 
   const counts = useMemo(() => {
@@ -364,6 +367,21 @@ export default function Home() {
   const tooShort = text.trim().length > 0 && text.trim().length < 40;
   const tooLong = text.length > MAX_DOCUMENT_CHARS;
   const tr = t(language);
+
+  const liveRedactions = useMemo(() => {
+    if (!text || text.trim().length === 0) return [];
+    return redact(text).redactions;
+  }, [text]);
+
+  const liveOrigRedactions = useMemo(() => {
+    if (!originalText || originalText.trim().length === 0) return [];
+    return redact(originalText).redactions;
+  }, [originalText]);
+
+  const liveModRedactions = useMemo(() => {
+    if (!modifiedText || modifiedText.trim().length === 0) return [];
+    return redact(modifiedText).redactions;
+  }, [modifiedText]);
 
   return (
     <div className="shell">
@@ -483,6 +501,14 @@ export default function Home() {
               {tr.privacyHint}
             </p>
 
+            {liveRedactions.length > 0 ? (
+              <div className="pii-live-shield" role="status" aria-live="polite">
+                🛡️ <strong>{tr.liveShieldActive}:</strong>{" "}
+                {liveRedactions.map((r) => `${r.count} × ${r.label}`).join(", ")}{" "}
+                {tr.liveShieldExplanation}
+              </div>
+            ) : null}
+
             <div className="actions">
               <button
                 type="button"
@@ -555,6 +581,16 @@ export default function Home() {
             <p className="hint" style={{ marginTop: "0.5rem" }}>
               {tr.privacyHint}
             </p>
+
+            {liveOrigRedactions.length > 0 || liveModRedactions.length > 0 ? (
+              <div className="pii-live-shield" role="status" aria-live="polite">
+                🛡️ <strong>{tr.liveShieldActive}:</strong>{" "}
+                {[...liveOrigRedactions, ...liveModRedactions]
+                  .map((r) => `${r.count} × ${r.label}`)
+                  .join(", ")}{" "}
+                {tr.liveShieldExplanation}
+              </div>
+            ) : null}
 
             <div className="actions">
               <button
@@ -665,10 +701,14 @@ export default function Home() {
                 </section>
 
                 {redactions.length > 0 ? (
-                  <p className="hint">
-                    {tr.maskedPrefix}
-                    {redactions.map((r) => `${r.count} × ${r.label}`).join(", ")}.
-                  </p>
+                  <div className="pii-shield-card" role="status">
+                    <span className="pii-shield-icon">🛡️</span>
+                    <div>
+                      <strong>{tr.maskedPrefix}</strong>{" "}
+                      <span>{redactions.map((r) => `${r.count} × ${r.label}`).join(", ")}.</span>
+                      <span className="pii-shield-subtext">{tr.maskedNotice}</span>
+                    </div>
+                  </div>
                 ) : null}
 
                 {/* CLAUSE-BY-CLAUSE FINDINGS */}
@@ -818,7 +858,19 @@ export default function Home() {
             ) : null}
 
             {comparisonResult ? (
-              <ComparisonView result={comparisonResult} language={language} />
+              <>
+                {redactions.length > 0 ? (
+                  <div className="pii-shield-card" role="status" style={{ margin: "1rem 0" }}>
+                    <span className="pii-shield-icon">🛡️</span>
+                    <div>
+                      <strong>{tr.maskedPrefix}</strong>{" "}
+                      <span>{redactions.map((r) => `${r.count} × ${r.label}`).join(", ")}.</span>
+                      <span className="pii-shield-subtext">{tr.maskedNotice}</span>
+                    </div>
+                  </div>
+                ) : null}
+                <ComparisonView result={comparisonResult} language={language} />
+              </>
             ) : null}
           </div>
         )}

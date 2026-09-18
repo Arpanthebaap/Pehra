@@ -26,6 +26,9 @@ export interface UiTranslations {
   summaryHeading: string;
   btnSpeak: string;
   maskedPrefix: string;
+  liveShieldActive: string;
+  liveShieldExplanation: string;
+  maskedNotice: string;
   clausesHeading: string;
   clausesHint: string;
   discardedHint: (count: number) => string;
@@ -136,6 +139,9 @@ export const TRANSLATIONS: Record<Language, UiTranslations> = {
     summaryHeading: "What this document is",
     btnSpeak: "Read this aloud",
     maskedPrefix: "Masked before sending: ",
+    liveShieldActive: "Live Privacy Shield Active",
+    liveShieldExplanation: "detected — masked in your browser before transmission.",
+    maskedNotice: "Your personal identifiers never left your browser.",
     clausesHeading: "Clause by clause",
     clausesHint:
       "Struck-through backgrounds mark protections that are absent from the document rather than present in it.",
@@ -263,6 +269,9 @@ export const TRANSLATIONS: Record<Language, UiTranslations> = {
     summaryHeading: "यह दस्तावेज़ क्या है",
     btnSpeak: "इसे बोलकर सुनाएँ",
     maskedPrefix: "भेजने से पहले छिपाया गया: ",
+    liveShieldActive: "लाइव गोपनीयता शील्ड सक्रिय",
+    liveShieldExplanation: "पहचाने गए — डिवाइस से बाहर जाने से पहले ब्राउज़र में स्वतः सुरक्षित।",
+    maskedNotice: "आपकी व्यक्तिगत जानकारी कभी भी आपके ब्राउज़र से बाहर नहीं गई।",
     clausesHeading: "धारा दर धारा विश्लेषण",
     clausesHint:
       "स्ट्राइक-थ्रू (कटा हुआ) बैकग्राउंड उन सुरक्षाओं को दर्शाता है जो दस्तावेज़ में मौजूद होने के बजाय गायब हैं।",
@@ -389,6 +398,9 @@ export const TRANSLATIONS: Record<Language, UiTranslations> = {
     summaryHeading: "এই নথিটি আসলে কী",
     btnSpeak: "এটি পড়ে শোনান",
     maskedPrefix: "পাঠানোর আগে মাস্ক করা হয়েছে: ",
+    liveShieldActive: "লাইভ গোপনীয়তা শিল্ড সক্রিয়",
+    liveShieldExplanation: "চিহ্নিত — ডিভাইস থেকে পাঠানোর আগেই ব্রাউজারে সুরক্ষিত।",
+    maskedNotice: "আপনার ব্যক্তিগত তথ্য কখনও আপনার ব্রাউজার ত্যাগ করেনি।",
     clausesHeading: "ধারাবাহিক বিশ্লেষণ",
     clausesHint:
       "স্ট্রাইক-থ্রু ব্যাকগ্রাউন্ড সেই সুরক্ষাগুলোকে নির্দেশ করে যা নথিতে থাকার কথা ছিল কিন্তু অনুপস্থিত।",

@@ -457,6 +457,46 @@ button:disabled {
   background: var(--void-wash);
 }
 
+.pii-live-shield {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--missing-wash);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--missing);
+  padding: 0.6rem 0.9rem;
+  margin-top: 0.75rem;
+  font-size: var(--step--1);
+  color: var(--ink);
+  border-radius: 4px;
+}
+
+.pii-shield-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: var(--missing-wash);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--missing);
+  padding: 0.85rem 1rem;
+  margin: 1.25rem 0;
+  border-radius: 4px;
+  font-size: var(--step--1);
+  color: var(--ink);
+}
+
+.pii-shield-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.pii-shield-subtext {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin-top: 0.25rem;
+}
+
 .section {
   margin-top: 3rem;
 }
